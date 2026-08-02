@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# Installs the x-poster skill into an OpenClaw workspace and prints next steps.
+# Default mode copies the skill; --dev symlinks it for live editing (requires
+# whitelisting the target via skills.load.allowSymlinkTargets in OpenClaw config).
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SKILL_SRC="$REPO_DIR/skill/x-poster"
+WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
+SKILL_DEST="$WORKSPACE/skills/x-poster"
+
+MODE="copy"
+if [[ $# -gt 0 ]]; then
+  if [[ "$1" == "--dev" ]]; then
+    MODE="dev"
+  else
+    echo "usage: install.sh [--dev]" >&2
+    exit 1
+  fi
+fi
+
+if [[ ! -d "$WORKSPACE" ]]; then
+  echo "error: OpenClaw workspace not found at $WORKSPACE" >&2
+  echo "Set OPENCLAW_WORKSPACE or run 'openclaw onboard' first." >&2
+  exit 1
+fi
+
+mkdir -p "$WORKSPACE/skills"
+
+if [[ "$MODE" == "dev" ]]; then
+  if [[ -e "$SKILL_DEST" && ! -L "$SKILL_DEST" ]]; then
+    echo "error: $SKILL_DEST exists and is not a symlink." >&2
+    echo "Back up its state/ directory, remove it, then rerun with --dev." >&2
+    exit 1
+  fi
+  ln -sfn "$SKILL_SRC" "$SKILL_DEST"
+  echo "Linked $SKILL_DEST -> $SKILL_SRC"
+  echo "Add this to ~/.openclaw/openclaw.json so the symlink is trusted:"
+  echo "  \"skills\": { \"load\": { \"allowSymlinkTargets\": [\"$REPO_DIR/skill\"] } }"
+else
+  command -v rsync >/dev/null || { echo "error: rsync is required" >&2; exit 1; }
+  if [[ -L "$SKILL_DEST" ]]; then
+    echo "error: $SKILL_DEST is a symlink (dev install); remove it or rerun with --dev." >&2
+    exit 1
+  fi
+  if [[ -d "$SKILL_DEST" && ! -f "$SKILL_DEST/SKILL.md" ]]; then
+    echo "error: $SKILL_DEST exists but doesn't look like an x-poster install." >&2
+    echo "Refusing to overwrite it; move it out of the way first." >&2
+    exit 1
+  fi
+  mkdir -p "$SKILL_DEST"
+  rsync -a --delete \
+    --exclude 'state/' \
+    --exclude 'voice-examples.local.md' \
+    "$SKILL_SRC/" "$SKILL_DEST/"
+  echo "Copied skill to $SKILL_DEST"
+  SKILL_SRC="$SKILL_DEST"
+fi
+
+mkdir -p "$SKILL_SRC/state/pending" "$SKILL_SRC/state/skipped"
+touch "$SKILL_SRC/state/post-log.jsonl" "$SKILL_SRC/state/backlog.md"
+if [[ ! -f "$SKILL_SRC/state/settings.json" ]]; then
+  cp "$SKILL_SRC/settings.example.json" "$SKILL_SRC/state/settings.json"
+  echo "Created state/settings.json from settings.example.json"
+fi
+
+cat <<EOF
+
+Skill files: $SKILL_SRC
+Settings:    $SKILL_SRC/state/settings.json
+Voice anchor (add 3-5 of your own tweets): $SKILL_SRC/voice-examples.local.md
+
+Next steps (one-time, interactive):
+  1. Model auth (Claude subscription reuse):
+       openclaw models auth setup-token --provider anthropic
+  2. X API auth (default posting mode; see skill PUBLISH-API.md):
+       create a free app at developer.x.com, install xurl, then:
+       xurl auth oauth2   # scopes: tweet.read tweet.write users.read offline.access
+     (browser fallback instead: openclaw browser open https://x.com and log in,
+      then set "postVia": "browser" in the settings file below)
+  3. Telegram approvals (optional, enables ship/skip from your phone):
+       create a bot with @BotFather, add the token under channels.telegram in
+       ~/.openclaw/openclaw.json, then message the bot and approve pairing:
+       openclaw pairing approve telegram <CODE>
+       put your Telegram user id into "telegramTo" in the settings file above
+  4. Cron (after a supervised test run):
+       openclaw cron create "30 9 * * *"  "Run the x-poster skill: draft one post (own-work focus) and request approval."  --name x-poster-am --session isolated --tz Europe/Rome
+       openclaw cron create "30 18 * * *" "Run the x-poster skill: draft one post (AI tools/news focus) and request approval." --name x-poster-pm --session isolated --tz Europe/Rome
+       openclaw cron create "0 8 * * 1"   "x-poster maintenance turn: refresh the content backlog per CONTENT.md. Do not draft or publish." --name x-poster-backlog --session isolated --tz Europe/Rome
+EOF

@@ -1,0 +1,7 @@
+{
+  "maxPerDay": 2,
+  "postVia": "api",
+  "telegramTo": "",
+  "styleAccounts": [],
+  "timezone": "Europe/Rome"
+}
