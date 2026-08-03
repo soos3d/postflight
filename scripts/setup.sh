@@ -330,11 +330,18 @@ add_telegram_channel() {
   openclaw gateway install
 }
 
+owner_allowlisted() {
+  openclaw config get commands.ownerAllowFrom 2>/dev/null | grep -qF "telegram:"
+}
+
 step_telegram() {
   step "Telegram approvals"
   local to
   to="$(telegram_to)"
-  if telegram_channel_installed && [[ -n "$to" ]]; then
+  # All three must hold: channel configured, approval target set, AND the
+  # owner allowlist present. Migrated installs can have the first two while
+  # pairing on this machine never happened.
+  if telegram_channel_installed && [[ -n "$to" ]] && owner_allowlisted; then
     ok "telegram channel installed, approvals go to $to"
     return 0
   fi
