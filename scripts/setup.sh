@@ -318,14 +318,15 @@ write_telegram_to() {
 
 add_telegram_channel() {
   echo "  Create a bot with @BotFather (/newbot) and copy its token."
-  local tokfile
-  tokfile="$(mktemp)"
-  CLEANUP+=("$tokfile")
+  # --token-file keeps the token out of the process table, but OpenClaw
+  # stores the PATH and reads it at runtime — the file must persist for as
+  # long as the channel exists, so it lives under ~/.openclaw, not /tmp.
+  local tokfile="$HOME/.openclaw/credentials/telegram-bot-token"
+  mkdir -p "$(dirname "$tokfile")" && chmod 700 "$(dirname "$tokfile")"
   ask_secret "  Bot token (hidden): " > "$tokfile"
+  chmod 600 "$tokfile"
   [[ -s "$tokfile" ]] || die "bot token required"
-  # --token-file keeps the token out of the process table.
   openclaw channels add --channel telegram --token-file "$tokfile"
-  rm -f "$tokfile"
   openclaw gateway install
 }
 
