@@ -75,7 +75,7 @@ Next steps (one-time, interactive; details in the repo README):
        openclaw models auth setup-token --provider anthropic
        openclaw config set agents.defaults.model.primary "anthropic/claude-fable-5"
   2. X API auth (default posting mode; see skill PUBLISH-API.md):
-       at developer.x.com create a project with an app INSIDE it, enable
+       at console.x.com create a project with an app INSIDE it, enable
        OAuth 2.0 (callback http://localhost:8080/callback), install xurl, then:
        xurl auth apps add x-poster --client-id ID --client-secret SECRET
        xurl auth oauth2 --app x-poster

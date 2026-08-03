@@ -121,126 +121,36 @@ turns, all encoded in the skill files now:
 
 ## Getting started
 
-Everything below is one-time setup, maybe half an hour if the X developer
-portal cooperates. You need an X account, a Telegram account, and
-[OpenClaw](https://docs.openclaw.ai) on a supported Node (22.22+ or 24.15+;
-`nvm install 24` settles it). The `gh` CLI must be authenticated
-(`gh auth status`) so the agent can read your repos.
-
-### 1. Install the skill
+One command runs everything scriptable and walks you through the two things
+that can't be automated — creating the X app and the Telegram bot:
 
 ```sh
-./scripts/install.sh          # copies the skill into <workspace>/skills/x-poster
-./scripts/install.sh --dev    # symlinks it for live editing
+curl -fsSL https://raw.githubusercontent.com/Soos3D/x-openclaw/main/scripts/setup.sh | bash
 ```
 
-Dev mode needs the symlink target trusted via
-`skills.load.allowSymlinkTargets` in `~/.openclaw/openclaw.json`; the
-installer prints the exact snippet. Confirm with `openclaw skills list` —
-x-poster should show `✓ ready`.
+Or, if piping curl into bash isn't your thing, clone first and run
+`./scripts/setup.sh` — same script (`--dev` symlinks the skill for live
+editing). Have three things ready before you start:
 
-### 2. Point the agent at a real model
+- [OpenClaw](https://docs.openclaw.ai) installed and onboarded, on Node
+  22.22+ or 24.15+ (`nvm install 24` settles it)
+- An X account with access to [console.x.com](https://console.x.com/) —
+  the wizard tells you the exact three clicks when it gets there
+- A Telegram bot token from [@BotFather](https://t.me/BotFather) (`/newbot`)
 
-Small local models write exactly the slop VOICE.md bans, so use a frontier
-model. With a Claude subscription there's no API bill:
+Every step probes real state before acting — it verifies model auth, X auth
+(`/2/users/me` must print your handle), Telegram pairing, and the cron
+routes, and skips whatever already works. That makes it safe to rerun after
+any failure, and rerunning on a finished install is a health check:
 
 ```sh
-openclaw models auth setup-token --provider anthropic
-openclaw config set agents.defaults.model.primary "anthropic/claude-fable-5"
+./scripts/setup.sh --check    # report every layer, change nothing
 ```
 
-`setup-token` needs a real terminal — it walks you through a browser approval
-on claude.ai and stores the token. Verify the wiring end to end:
-
-```sh
-openclaw agent --local --agent main -m "Reply with exactly: auth-ok"
-```
-
-### 3. X API access
-
-The fiddly part, because the developer portal has opinions. In order:
-
-1. At [developer.x.com](https://developer.x.com/en/portal/dashboard), create a
-   **project** and an app **inside it**. A standalone app authenticates fine
-   and then fails every v2 call with `client-not-enrolled` — the app must be
-   project-attached and the project on a package with write access (the
-   entry-level tier covers three posts a day with room to spare).
-2. In the app's **User authentication settings**: enable OAuth 2.0, pick
-   **"Web App, Automated App or Bot"**, set the callback URI to exactly
-   `http://localhost:8080/callback`, and fill in any real website URL.
-3. Install [xurl](https://github.com/xdevplatform/xurl), X's official OAuth
-   CLI (release binaries only, no brew formula):
-
-   ```sh
-   curl -sLO https://github.com/xdevplatform/xurl/releases/latest/download/xurl_Darwin_arm64.tar.gz
-   tar xzf xurl_Darwin_arm64.tar.gz && mv xurl ~/.local/bin/
-   ```
-
-   (That's Apple Silicon; the releases page has Linux and Windows tarballs
-   under the same naming scheme.)
-
-4. Register the app's OAuth 2.0 client credentials and authorize:
-
-   ```sh
-   xurl auth apps add x-poster --client-id YOUR_CLIENT_ID --client-secret YOUR_CLIENT_SECRET
-   xurl auth oauth2 --app x-poster
-   xurl auth default x-poster    # bare xurl commands now use this app
-   xurl /2/users/me              # prints your handle when everything works
-   ```
-
-   The consent flow requests `offline.access`, so headless runs refresh
-   their own tokens and never re-prompt. Tokens live in `~/.xurl` — for a
-   server, authorize locally and copy that directory over.
-
-### 4. Telegram approvals
-
-Create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`), then:
-
-```sh
-openclaw channels add --channel telegram --token YOUR_BOT_TOKEN
-openclaw gateway install
-```
-
-Message your new bot once from your own account. It replies with your user
-id and a pairing code; approve it and make yourself the command owner:
-
-```sh
-openclaw pairing approve telegram THE_CODE
-openclaw config set commands.ownerAllowFrom '["telegram:YOUR_USER_ID"]'
-openclaw gateway restart
-```
-
-Finally, put the same user id in `skill/x-poster/state/settings.json` as
-`telegramTo`. That field is the approval gate: only that sender can ship a
-draft, and while it's empty the skill runs in draft mode — writes drafts to
-`state/drafts.md`, sends nothing, posts nothing.
-
-### 5. Make it sound like you
-
-Two local files the repo never sees:
-
-- `state/settings.json` → `styleAccounts`: a few public accounts whose
-  register you want studied during style refreshes.
-- `voice-examples.local.md`: 3 to 5 of your own tweets. These outrank
-  everything else, so the output stays yours rather than generically fluent.
-
-### 6. Test before you schedule
-
-Run one turn in draft mode (leave `telegramTo` empty) and read the result in
-`state/drafts.md` against VOICE.md:
-
-```sh
-openclaw agent --local --agent main -m "x-poster drafting turn: draft one post, own-work focus."
-```
-
-Then set `telegramTo`, message your bot "x-poster: draft a post", and reply
-`skip` — the draft should land in `state/skipped/` and nowhere else. Only
-after a full draft → `ship` → verified permalink round trip should you
-register the cron jobs; the installer prints the exact commands (three
-drafting turns a day plus a weekly backlog refresh, isolated sessions).
-The example times target US engagement windows from a European timezone —
-shift them to fit your audience and your own waking hours, since every
-draft waits on your reply.
+When it finishes, message your bot "x-poster: draft a post" and reply `skip`
+to watch the loop work before the first cron slot fires. Prefer to run every
+command yourself, or need to debug one layer? The full manual walkthrough is
+in [docs/SETUP-MANUAL.md](docs/SETUP-MANUAL.md).
 
 If the bot's behavior doesn't match an edit you just made to the skill
 files, or it kept an old model after a config change, send `/new` to the

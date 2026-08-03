@@ -59,10 +59,10 @@ no browser, and stays inside X's automation rules.
 
 ## One-time setup (user)
 
-1. Create an X developer account and, at developer.x.com, a **project with
+1. Create an X developer account and, at console.x.com, a **project with
    the app inside it** — a standalone app authenticates but fails every v2
    call with `client-not-enrolled`. The project needs a package with write
-   access; the entry tier covers 2 posts/day with room to spare.
+   access; the entry tier covers 3 posts/day with room to spare.
 2. In the app's User authentication settings: enable OAuth 2.0, type
    "Web App, Automated App or Bot", callback URI exactly
    `http://localhost:8080/callback`, any real website URL.

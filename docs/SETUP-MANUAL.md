@@ -1,0 +1,135 @@
+# Manual setup
+
+`scripts/setup.sh` automates everything on this page and is the recommended
+path. This walkthrough exists for people who want to see every command before
+running it, or need to debug a single layer. Total time is maybe half an hour
+if the X console cooperates.
+
+Prerequisites: an X account, a Telegram account, and
+[OpenClaw](https://docs.openclaw.ai) on a supported Node (22.22+ or 24.15+;
+`nvm install 24` settles it). The `gh` CLI must be authenticated
+(`gh auth status`) so the agent can read your repos.
+
+## 1. Install the skill
+
+```sh
+./scripts/install.sh          # copies the skill into <workspace>/skills/x-poster
+./scripts/install.sh --dev    # symlinks it for live editing
+```
+
+Dev mode needs the symlink target trusted via
+`skills.load.allowSymlinkTargets` in `~/.openclaw/openclaw.json`; the
+installer prints the exact snippet. Confirm with `openclaw skills list` —
+x-poster should show `✓ ready`.
+
+## 2. Point the agent at a real model
+
+Small local models write exactly the slop VOICE.md bans, so use a frontier
+model. With a Claude subscription there's no API bill:
+
+```sh
+openclaw models auth setup-token --provider anthropic
+openclaw config set agents.defaults.model.primary "anthropic/claude-fable-5"
+```
+
+`setup-token` needs a real terminal — it walks you through a browser approval
+on claude.ai and stores the token. Verify the wiring end to end:
+
+```sh
+openclaw agent --local --agent main -m "Reply with exactly: auth-ok"
+```
+
+## 3. X API access
+
+The fiddly part, because the developer console has opinions. In order:
+
+1. At [console.x.com](https://console.x.com/), create a **project** and an
+   app **inside it**. A standalone app authenticates fine and then fails
+   every v2 call with `client-not-enrolled` — the app must be
+   project-attached and the project on a package with write access (the
+   entry-level tier covers three posts a day with room to spare).
+2. In the app's **User authentication settings**: enable OAuth 2.0, pick
+   **"Web App, Automated App or Bot"**, set the callback URI to exactly
+   `http://localhost:8080/callback`, and fill in any real website URL.
+3. Install [xurl](https://github.com/xdevplatform/xurl), X's official OAuth
+   CLI (release binaries only, no brew formula):
+
+   ```sh
+   curl -sLO https://github.com/xdevplatform/xurl/releases/latest/download/xurl_Darwin_arm64.tar.gz
+   tar xzf xurl_Darwin_arm64.tar.gz && mv xurl ~/.local/bin/
+   ```
+
+   (That's Apple Silicon; the releases page has Linux and Windows tarballs
+   under the same naming scheme.)
+
+4. Register the app's OAuth 2.0 client credentials and authorize:
+
+   ```sh
+   xurl auth apps add x-poster --client-id YOUR_CLIENT_ID --client-secret YOUR_CLIENT_SECRET
+   xurl auth oauth2 --app x-poster
+   xurl auth default x-poster    # bare xurl commands now use this app
+   xurl /2/users/me              # prints your handle when everything works
+   ```
+
+   The consent flow requests `offline.access`, so headless runs refresh
+   their own tokens and never re-prompt. Tokens live in `~/.xurl` — for a
+   server, authorize locally and copy that directory over.
+
+## 4. Telegram approvals
+
+Create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`), then:
+
+```sh
+openclaw channels add --channel telegram --token YOUR_BOT_TOKEN
+openclaw gateway install
+```
+
+Message your new bot once from your own account. It replies with your user
+id and a pairing code; approve it and make yourself the command owner:
+
+```sh
+openclaw pairing approve telegram THE_CODE
+openclaw config set commands.ownerAllowFrom '["telegram:YOUR_USER_ID"]'
+openclaw gateway restart
+```
+
+Finally, put the same user id in `skill/x-poster/state/settings.json` as
+`telegramTo`. That field is the approval gate: only that sender can ship a
+draft, and while it's empty the skill runs in draft mode — writes drafts to
+`state/drafts.md`, sends nothing, posts nothing.
+
+## 5. Make it sound like you
+
+Two local files the repo never sees:
+
+- `state/settings.json` → `styleAccounts`: a few public accounts whose
+  register you want studied during style refreshes.
+- `voice-examples.local.md`: 3 to 5 of your own tweets. These outrank
+  everything else, so the output stays yours rather than generically fluent.
+
+## 6. Test, then schedule
+
+Run one turn in draft mode (leave `telegramTo` empty) and read the result in
+`state/drafts.md` against VOICE.md:
+
+```sh
+openclaw agent --local --agent main -m "x-poster drafting turn: draft one post, own-work focus."
+```
+
+Then set `telegramTo`, message your bot "x-poster: draft a post", and reply
+`skip` — the draft should land in `state/skipped/` and nowhere else. Only
+after a full draft → `ship` → verified permalink round trip should you
+register the cron jobs; the installer prints the exact commands (three
+drafting turns a day plus a weekly backlog refresh, isolated sessions).
+The example times target US engagement windows from a European timezone —
+shift them to fit your audience and your own waking hours, since every
+draft waits on your reply.
+
+One trap worth knowing: cron delivery defaults to `announce -> last`, which
+has no route in an isolated session and fails closed. Always pass
+`--channel telegram --to YOUR_USER_ID` when creating the jobs (setup.sh
+does this for you).
+
+If the bot's behavior doesn't match an edit you just made to the skill
+files, or it kept an old model after a config change, send `/new` to the
+bot: the persistent session only re-reads everything when it starts.
