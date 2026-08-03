@@ -40,6 +40,13 @@ fail() { printf '  \033[31m✗\033[0m %s\n' "$1" >&2; RESULTS+=("✗ $1"); }
 step() { CURRENT_STEP="$1"; printf '\n\033[1m%s\033[0m\n' "$1"; }
 die()  { printf '\033[31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 
+# Temp files are registered here and removed on exit. RETURN traps are
+# deliberately avoided: bash 3.2 (macOS) drops them after the setting
+# function returns, bash 5 (Linux) keeps them firing on later returns —
+# code that is correct on one breaks on the other.
+CLEANUP=()
+trap 'rm -rf ${CLEANUP[@]+"${CLEANUP[@]}"} 2>/dev/null' EXIT
+
 # With -E this fires for unexpected failures inside functions too, so the
 # wizard always says where it stopped instead of exiting silently.
 on_err() {
@@ -208,7 +215,7 @@ install_xurl() {
   [[ "$arch" == "aarch64" ]] && arch="arm64"
   asset="xurl_${os}_${arch}.tar.gz"
   tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' RETURN
+  CLEANUP+=("$tmp")
   local base="https://github.com/xdevplatform/xurl/releases/download/v${XURL_VERSION}"
   curl -fsSL "$base/$asset" -o "$tmp/$asset" \
     || die "no xurl v$XURL_VERSION release for ${os}_${arch} — install manually: https://github.com/xdevplatform/xurl"
@@ -304,7 +311,7 @@ write_telegram_to() {
   file="$(settings_file)"
   [[ -f "$file" ]] || die "settings.json missing at $file — rerun scripts/install.sh"
   tmp="$(mktemp "$file.XXXXXX")"
-  trap 'rm -f "$tmp"' RETURN
+  CLEANUP+=("$tmp")
   jq --arg id "$1" '.telegramTo = $id' "$file" > "$tmp" || die "could not update $file"
   mv "$tmp" "$file"
 }
@@ -313,11 +320,12 @@ add_telegram_channel() {
   echo "  Create a bot with @BotFather (/newbot) and copy its token."
   local tokfile
   tokfile="$(mktemp)"
-  trap 'rm -f "$tokfile"' RETURN
+  CLEANUP+=("$tokfile")
   ask_secret "  Bot token (hidden): " > "$tokfile"
   [[ -s "$tokfile" ]] || die "bot token required"
   # --token-file keeps the token out of the process table.
   openclaw channels add --channel telegram --token-file "$tokfile"
+  rm -f "$tokfile"
   openclaw gateway install
 }
 
