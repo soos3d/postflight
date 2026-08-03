@@ -10,9 +10,11 @@ Alternate content types so the account doesn't repeat itself. Default rotation
 3. AI tool or news take
 4. project spotlight or dev log (a different repo than last time)
 
-Morning cron runs lean toward own-work content; evening runs lean toward AI
-tools/news. Multiple posts about the same repo are fine and encouraged, but
-each must use a different angle and be spaced at least 4 days apart.
+The cron message names the focus for each slot: the first daily run leans
+own-work, the second leans AI tools/news, and the third is aviation (its own
+rotation below — aviation posts don't consume the tech rotation). Multiple
+posts about the same repo are fine and encouraged, but each must use a
+different angle and be spaced at least 4 days apart.
 
 ## Own repos
 
@@ -65,3 +67,32 @@ done
 Rules for news takes: only pick items you can add a developer-relevant opinion
 or firsthand context to. Summarizing headlines is not a tweet. If nothing on
 the list clears that bar, fall back to an own-repo angle instead.
+
+## Aviation
+
+The user is an experienced pilot and flight instructor; the daily aviation
+slot draws on that. Rotate through these angles (check recent `topic` fields
+in the post log, same as the tech rotation):
+
+1. instructional tip — the kind of thing students consistently get wrong,
+   explained the way an instructor would in the debrief
+2. cool fact — aerodynamics, systems, navigation, history; something a
+   non-pilot can enjoy and a pilot can nod along to
+3. "what it actually does" — an instrument, system, or procedure demystified
+4. weather / ATC / airspace explainer — practical, from real flying
+
+Hard rules:
+
+- **No accident or incident content.** No crash commentary, no "lessons from
+  the recent accident", no NTSB takes — even educational framing. Skip the
+  angle entirely.
+- **Accuracy over specificity.** Never invent numbers, regulation references,
+  or procedure details. Cite a FAR/AIM section or a V-speed only when certain
+  it's right; otherwise explain the concept without the citation. A wrong
+  instructional detail from an instructor account is worse than no post.
+- Firsthand instructor framing beats encyclopedia framing: "what I tell
+  students" over "did you know".
+
+Backlog: keep an `## aviation` section in `state/backlog.md` with unposted
+angles, same `- [ ]` format as repos. The weekly maintenance run refreshes it
+alongside the repo angles.

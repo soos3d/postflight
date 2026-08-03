@@ -70,21 +70,34 @@ Skill files: $SKILL_SRC
 Settings:    $SKILL_SRC/state/settings.json
 Voice anchor (add 3-5 of your own tweets): $SKILL_SRC/voice-examples.local.md
 
-Next steps (one-time, interactive):
-  1. Model auth (Claude subscription reuse):
+Next steps (one-time, interactive; details in the repo README):
+  1. Model auth (Claude subscription reuse; needs a real terminal):
        openclaw models auth setup-token --provider anthropic
+       openclaw config set agents.defaults.model.primary "anthropic/claude-fable-5"
   2. X API auth (default posting mode; see skill PUBLISH-API.md):
-       create a free app at developer.x.com, install xurl, then:
-       xurl auth oauth2   # scopes: tweet.read tweet.write users.read offline.access
+       at developer.x.com create a project with an app INSIDE it, enable
+       OAuth 2.0 (callback http://localhost:8080/callback), install xurl, then:
+       xurl auth apps add x-poster --client-id ID --client-secret SECRET
+       xurl auth oauth2 --app x-poster
+       xurl auth default x-poster
+       xurl /2/users/me   # prints your handle when it all works
      (browser fallback instead: openclaw browser open https://x.com and log in,
       then set "postVia": "browser" in the settings file below)
   3. Telegram approvals (optional, enables ship/skip from your phone):
-       create a bot with @BotFather, add the token under channels.telegram in
-       ~/.openclaw/openclaw.json, then message the bot and approve pairing:
+       create a bot with @BotFather, then:
+       openclaw channels add --channel telegram --token BOT_TOKEN
+       openclaw gateway install
+       message the bot once; it replies with your user id and a pairing code:
        openclaw pairing approve telegram <CODE>
+       openclaw config set commands.ownerAllowFrom '["telegram:<YOUR_USER_ID>"]'
+       openclaw gateway restart
        put your Telegram user id into "telegramTo" in the settings file above
-  4. Cron (after a supervised test run):
-       openclaw cron create "30 9 * * *"  "Run the x-poster skill: draft one post (own-work focus) and request approval."  --name x-poster-am --session isolated --tz Europe/Rome
-       openclaw cron create "30 18 * * *" "Run the x-poster skill: draft one post (AI tools/news focus) and request approval." --name x-poster-pm --session isolated --tz Europe/Rome
+       (if the bot later ignores skill edits or a model change, send /new to
+        the bot: the persistent session only re-reads config when it starts)
+  4. Cron (after a supervised test run; times target US engagement windows
+     from Europe — adjust to your audience and waking hours):
+       openclaw cron create "30 15 * * *" "Run the x-poster skill: draft one post (own-work focus) and request approval."  --name x-poster-own-work --session isolated --tz Europe/Rome
+       openclaw cron create "30 18 * * *" "Run the x-poster skill: draft one post (AI tools/news focus) and request approval." --name x-poster-ai-news --session isolated --tz Europe/Rome
+       openclaw cron create "0 21 * * *"  "Run the x-poster skill: draft one post (aviation focus per CONTENT.md) and request approval." --name x-poster-aviation --session isolated --tz Europe/Rome
        openclaw cron create "0 8 * * 1"   "x-poster maintenance turn: refresh the content backlog per CONTENT.md. Do not draft or publish." --name x-poster-backlog --session isolated --tz Europe/Rome
 EOF

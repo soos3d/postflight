@@ -1,5 +1,5 @@
 {
-  "maxPerDay": 2,
+  "maxPerDay": 3,
   "postVia": "api",
   "telegramTo": "",
   "styleAccounts": [],
