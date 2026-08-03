@@ -109,7 +109,8 @@ openclaw gateway uninstall               # LaunchAgent gone for good
 
 The server's cron step in `setup.sh` already registered the four jobs (it
 prompts for slot times; the defaults target US engagement windows and stay
-DST-correct via `--tz Europe/Rome`). Watch the next slot fire unattended.
+DST-correct via `--tz America/New_York`). Watch the next slot fire
+unattended.
 
 ## 7. Monitoring
 
@@ -120,7 +121,7 @@ is down:
 ```sh
 openclaw cron create "0 9 * * 1" \
   "Run 'openclaw doctor' via shell and send me a one-line health summary, mentioning xurl and model auth status." \
-  --name x-poster-doctor --session isolated --tz Europe/Rome \
+  --name x-poster-doctor --session isolated --tz America/New_York \
   --channel telegram --to YOUR_TELEGRAM_USER_ID
 ```
 

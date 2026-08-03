@@ -121,9 +121,9 @@ Then set `telegramTo`, message your bot "x-poster: draft a post", and reply
 after a full draft → `ship` → verified permalink round trip should you
 register the cron jobs; the installer prints the exact commands (three
 drafting turns a day plus a weekly backlog refresh, isolated sessions).
-The example times target US engagement windows from a European timezone —
-shift them to fit your audience and your own waking hours, since every
-draft waits on your reply.
+The example times target US engagement windows (anchored to
+America/New_York so they track US DST) — shift them to fit your audience
+and your own waking hours, since every draft waits on your reply.
 
 One trap worth knowing: cron delivery defaults to `announce -> last`, which
 has no route in an isolated session and fails closed. Always pass
