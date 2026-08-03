@@ -12,7 +12,10 @@ Read-only viewing of public profiles is allowed only during a maintenance turn
 (style research per VOICE.md); publishing actions are limited to the user's own
 single approved post.
 
-Paths below are relative to this skill folder (`{baseDir}`).
+Paths below are relative to this skill folder (`{baseDir}`). Shell commands
+run from the workspace root, NOT from here — always use `{baseDir}/...`
+absolute paths in commands (`wc {baseDir}/state/post-log.jsonl`, never
+`wc state/post-log.jsonl`), or `cd {baseDir}` first.
 
 ## Settings
 
