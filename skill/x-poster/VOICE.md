@@ -62,6 +62,9 @@ Read the draft aloud in your head as if a colleague sent it in Slack. If it
 sounds like a LinkedIn post, a press release, or an AI wrote it, rewrite it.
 If it could have been written by someone who never ran the code, rewrite it.
 
+Length trims are mechanical, not a rewrite trigger: after cutting a clause to
+fit the character cap, re-run only the count, not this checklist.
+
 ## Refreshing style samples
 
 Maintenance turns only (see SKILL.md Modes), at most weekly. When a browser

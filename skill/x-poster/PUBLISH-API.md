@@ -6,15 +6,39 @@ no browser, and stays inside X's automation rules.
 
 ## Publishing steps
 
-1. Verify xurl is authenticated: `xurl auth status` (or a cheap
-   `xurl get /2/users/me`). If auth is missing or expired: stop and tell the
-   user to re-run `xurl auth oauth2`. Never attempt authentication yourself.
+1. Verify xurl is authenticated with exactly `xurl /2/users/me` — bare
+   endpoint, nothing between `xurl` and the path. A response with your user
+   object means auth is good. Only a 401 with an error body means auth is
+   actually missing or expired: then stop and tell the user to re-run
+   `xurl auth oauth2`. Never attempt authentication yourself.
 2. Build the request body without shell-interpolating the tweet text (it
-   derives from external content):
+   derives from external content). xurl's `-d` takes a literal string and
+   does NOT support curl's `@file` form — `-d @path` sends the characters
+   `@path` as data. Never paste the tweet text inline inside `-d '...'`
+   either: quotes in the text would break the command. Write the text with
+   a quoted heredoc (the same `draft.txt` from the SKILL.md length check)
+   and let jq build the body:
 
    ```sh
-   jq -n --arg text "$DRAFT_TEXT" '{text: $text}' > "$TMPDIR/tweet.json"
-   xurl post /2/tweets -d @"$TMPDIR/tweet.json"
+   cat > "${TMPDIR:-/tmp}/draft.txt" <<'DRAFT'
+   <tweet text verbatim>
+   DRAFT
+   BODY="$(jq -Rsc '{text: rtrimstr("\n")}' < "${TMPDIR:-/tmp}/draft.txt")"
+   xurl -X POST /2/tweets -d "$BODY"
+   ```
+
+   Pass `$BODY` only as a quoted argument, exactly as above; never route it
+   through `echo` (zsh's echo expands the `\n` escapes and corrupts the
+   JSON). xurl also has no `get`/`post` HTTP-verb subcommands: a bare word
+   between `xurl` and the path is parsed as an endpoint or as tweet text,
+   so `xurl get /2/users/me` requests a nonsense URL (returns `{}` /
+   "request failed" even with valid auth) and `xurl post /2/tweets` would
+   publish the literal string "/2/tweets". The HTTP method is only ever set
+   with `-X`. The only two request forms this skill uses are:
+
+   ```sh
+   xurl /2/users/me
+   xurl -X POST /2/tweets -d "$BODY"
    ```
 
 3. Read `.data.id` from the response. The permalink is
@@ -22,6 +46,10 @@ no browser, and stays inside X's automation rules.
 
 ## Error handling
 
+- **`{}` plus "request failed" with no HTTP status or error body** — a
+  malformed command or path, not an auth failure. Re-check the command
+  against the two forms above and retry the corrected form once before
+  concluding anything about auth.
 - **401 / auth failure** — token refresh failed. Alert the user, stop.
 - **403** — usually a duplicate post or a policy block. Report the response
   body verbatim; do not modify the text and retry on your own.
@@ -31,10 +59,23 @@ no browser, and stays inside X's automation rules.
 
 ## One-time setup (user)
 
-1. Create a free X developer account and a project + app at
-   developer.x.com. Free tier write access (~500 posts/month) covers 2/day.
-2. Install xurl and run `xurl auth oauth2` with scopes `tweet.read`,
-   `tweet.write`, `users.read`, `offline.access` (offline grants the refresh
-   token that makes headless runs possible).
-3. Tokens live in `~/.xurl`. For a server deployment, run the auth locally
+1. Create an X developer account and, at developer.x.com, a **project with
+   the app inside it** — a standalone app authenticates but fails every v2
+   call with `client-not-enrolled`. The project needs a package with write
+   access; the entry tier covers 2 posts/day with room to spare.
+2. In the app's User authentication settings: enable OAuth 2.0, type
+   "Web App, Automated App or Bot", callback URI exactly
+   `http://localhost:8080/callback`, any real website URL.
+3. Install xurl (release binaries from github.com/xdevplatform/xurl), then:
+
+   ```sh
+   xurl auth apps add x-poster --client-id CLIENT_ID --client-secret CLIENT_SECRET
+   xurl auth oauth2 --app x-poster    # browser consent; grants offline.access
+   xurl auth default x-poster         # so bare xurl commands use this app
+   xurl /2/users/me                   # prints your handle when it all works
+   ```
+
+   The `offline.access` scope grants a refresh token, so headless runs never
+   re-prompt for consent.
+4. Tokens live in `~/.xurl`. For a server deployment, run the auth locally
    and copy that directory over. Never commit it or copy it into skill state.
