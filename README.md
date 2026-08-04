@@ -1,4 +1,4 @@
-# x-openclaw
+# x-poster
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -65,7 +65,7 @@ Have three things ready:
 Then run the setup wizard:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Soos3D/x-openclaw/main/scripts/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Soos3D/x-poster/main/scripts/setup.sh | bash
 ```
 
 If piping curl into bash isn't your thing, clone the repo and run
@@ -145,8 +145,8 @@ that; it receives the finished credentials instead:
 
 ```sh
 # server: install everything, Ctrl-C at the model-auth prompt
-git clone https://github.com/Soos3D/x-openclaw.git ~/x-openclaw
-cd ~/x-openclaw && ./scripts/setup.sh
+git clone https://github.com/Soos3D/x-poster.git ~/x-poster
+cd ~/x-poster && ./scripts/setup.sh
 
 # laptop: package credentials and skill state, copy it over
 openclaw gateway stop

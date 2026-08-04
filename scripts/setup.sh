@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-command setup for the x-poster OpenClaw skill.
 #
-#   curl -fsSL https://raw.githubusercontent.com/Soos3D/x-openclaw/main/scripts/setup.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Soos3D/x-poster/main/scripts/setup.sh | bash
 #   ./scripts/setup.sh [--check] [--dev]
 #
 # Every step probes real state first and skips what's already done, so the
@@ -13,8 +13,8 @@
 # create the Telegram bot (@BotFather). It pauses and walks you through both.
 set -Eeuo pipefail
 
-REPO_URL="${X_OPENCLAW_REPO:-https://github.com/Soos3D/x-openclaw}"
-REPO_DIR="${X_OPENCLAW_DIR:-$HOME/x-openclaw}"
+REPO_URL="${X_POSTER_REPO:-https://github.com/Soos3D/x-poster}"
+REPO_DIR="${X_POSTER_DIR:-$HOME/x-poster}"
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
 XURL_APP="x-poster"
 XURL_VERSION="${XURL_VERSION:-1.3.1}"
@@ -94,21 +94,21 @@ ensure_repo() {
     REPO_DIR="$(cd "$script_dir/.." && pwd)"
     return
   fi
-  [[ -z "${X_OPENCLAW_REEXEC:-}" ]] || die "re-exec loop: $REPO_DIR is not a valid x-poster checkout"
+  [[ -z "${X_POSTER_REEXEC:-}" ]] || die "re-exec loop: $REPO_DIR is not a valid x-poster checkout"
   # curl | bash: fetch the repo, then hand off to the checked-out script.
   command -v git >/dev/null || die "git is required to fetch $REPO_URL"
   if [[ -d "$REPO_DIR/.git" ]]; then
     local origin
     origin="$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null || true)"
     [[ "$origin" == "$REPO_URL" || "$origin" == "$REPO_URL.git" ]] \
-      || die "$REPO_DIR points at ${origin:-no remote}, not $REPO_URL — remove it or set X_OPENCLAW_DIR"
+      || die "$REPO_DIR points at ${origin:-no remote}, not $REPO_URL — remove it or set X_POSTER_DIR"
     [[ $CHECK_ONLY -eq 1 ]] || git -C "$REPO_DIR" pull --ff-only \
       || die "could not update $REPO_DIR (dirty or diverged checkout?)"
   else
     [[ $CHECK_ONLY -eq 1 ]] && die "no checkout at $REPO_DIR — clone it first, --check changes nothing"
     git clone "$REPO_URL" "$REPO_DIR"
   fi
-  X_OPENCLAW_REEXEC=1 exec bash "$REPO_DIR/scripts/setup.sh" "$@"
+  X_POSTER_REEXEC=1 exec bash "$REPO_DIR/scripts/setup.sh" "$@"
 }
 
 # ---------- step 1: dependencies ----------

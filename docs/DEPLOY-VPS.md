@@ -36,8 +36,8 @@ openclaw onboard        # accept defaults; creates ~/.openclaw + workspace
 ## 3. Clone and install the skill
 
 ```sh
-git clone https://github.com/Soos3D/x-openclaw.git ~/x-openclaw
-cd ~/x-openclaw && ./scripts/setup.sh --check   # see what the box is missing
+git clone https://github.com/Soos3D/x-poster.git ~/x-poster
+cd ~/x-poster && ./scripts/setup.sh --check   # see what the box is missing
 ./scripts/setup.sh                              # installs skill + xurl; STOP at the model-auth prompt
 ```
 
@@ -58,7 +58,7 @@ scp ~/x-poster-state-*.tar.gz poster@SERVER:
 On the **server**:
 
 ```sh
-cd ~/x-openclaw
+cd ~/x-poster
 ./scripts/migrate-state.sh import ~/x-poster-state-*.tar.gz
 xurl /2/users/me            # must print your handle
 openclaw models status      # must show the anthropic profile
@@ -129,7 +129,7 @@ The laptop is the dev machine; the server only consumes git:
 ```sh
 # laptop: edit, commit, push
 # server:
-cd ~/x-openclaw && git pull && ./scripts/install.sh   # state/ is never touched
+cd ~/x-poster && git pull && ./scripts/install.sh   # state/ is never touched
 ```
 
 If the persistent Telegram session ignores an update, send `/new` to the

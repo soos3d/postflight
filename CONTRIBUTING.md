@@ -1,6 +1,6 @@
 # Contributing
 
-x-openclaw is five markdown files and three shell scripts. Most useful
+x-poster is five markdown files and three shell scripts. Most useful
 contributions are edits to instructions, not code, and the bar for both is
 the same: the change came from a real run, not from reading the file and
 guessing.
