@@ -131,6 +131,12 @@ instead. Posting times are cron jobs; change them by rerunning
   is discarded and another topic picked.
 - Expired auth means stop and alert. The agent never attempts a login and
   never touches credentials.
+- Honest limits: these rules are instructions the model follows, not
+  technical controls. The agent holds working X credentials and a shell, so
+  a sufficiently clever prompt injection could in principle bypass them.
+  The per-post approval gate exists precisely so anything that slips
+  through still has to get past you before it reaches your account —
+  supervise it like any automation with keys to something you care about.
 
 ## Running it on a server
 

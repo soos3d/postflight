@@ -20,15 +20,17 @@ no browser, and stays inside X's automation rules.
    and let jq build the body:
 
    ```sh
-   cat > "${TMPDIR:-/tmp}/draft.txt" <<'DRAFT'
+   cat > "${TMPDIR:-/tmp}/draft.txt" <<'XPOSTER_EOF_3f9c1a'
    <tweet text verbatim>
-   DRAFT
+   XPOSTER_EOF_3f9c1a
    BODY="$(jq -Rsc '{text: rtrimstr("\n")}' < "${TMPDIR:-/tmp}/draft.txt")"
    xurl -X POST /2/tweets -d "$BODY"
    ```
 
-   Pass `$BODY` only as a quoted argument, exactly as above; never route it
-   through `echo` (zsh's echo expands the `\n` escapes and corrupts the
+   The obscure delimiter is a security measure (see the length-check step in
+   SKILL.md): if the tweet text contains that exact line, discard the draft
+   rather than adjusting the command. Pass `$BODY` only as a quoted argument,
+   exactly as above; never route it through `echo` (zsh's echo expands the `\n` escapes and corrupts the
    JSON). xurl also has no `get`/`post` HTTP-verb subcommands: a bare word
    between `xurl` and the path is parsed as an endpoint or as tweet text,
    so `xurl get /2/users/me` requests a nonsense URL (returns `{}` /
@@ -76,6 +78,10 @@ no browser, and stays inside X's automation rules.
    ```
 
    The `offline.access` scope grants a refresh token, so headless runs never
-   re-prompt for consent.
+   re-prompt for consent. The `apps add` command puts the client secret in
+   your shell history as typed — prefix it with a space (with
+   `HIST_IGNORE_SPACE`/`ignorespace` set) or scrub the history line after,
+   and rotate the secret if it leaked. `setup.sh` avoids this with a hidden
+   prompt.
 4. Tokens live in `~/.xurl`. For a server deployment, run the auth locally
    and copy that directory over. Never commit it or copy it into skill state.

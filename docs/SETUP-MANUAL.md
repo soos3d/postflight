@@ -52,15 +52,21 @@ The fiddly part, because the developer console has opinions. In order:
    **"Web App, Automated App or Bot"**, set the callback URI to exactly
    `http://localhost:8080/callback`, and fill in any real website URL.
 3. Install [xurl](https://github.com/xdevplatform/xurl), X's official OAuth
-   CLI (release binaries only, no brew formula):
+   CLI (release binaries only, no brew formula). Pin the version and verify
+   the checksum — this binary is about to be handed your client secret, and
+   `latest` is a mutable pointer (`setup.sh` does exactly the same):
 
    ```sh
-   curl -sLO https://github.com/xdevplatform/xurl/releases/latest/download/xurl_Darwin_arm64.tar.gz
+   XURL_VERSION=1.3.1
+   curl -sLO "https://github.com/xdevplatform/xurl/releases/download/v${XURL_VERSION}/xurl_Darwin_arm64.tar.gz"
+   curl -sLO "https://github.com/xdevplatform/xurl/releases/download/v${XURL_VERSION}/xurl_${XURL_VERSION}_checksums.txt"
+   grep " xurl_Darwin_arm64.tar.gz$" "xurl_${XURL_VERSION}_checksums.txt" | shasum -a 256 -c -
    tar xzf xurl_Darwin_arm64.tar.gz && mv xurl ~/.local/bin/
    ```
 
    (That's Apple Silicon; the releases page has Linux and Windows tarballs
-   under the same naming scheme.)
+   under the same naming scheme — on Linux use `sha256sum -c -` instead of
+   `shasum -a 256 -c -`.)
 
 4. Register the app's OAuth 2.0 client credentials and authorize:
 
@@ -71,18 +77,33 @@ The fiddly part, because the developer console has opinions. In order:
    xurl /2/users/me              # prints your handle when everything works
    ```
 
+   One caveat: xurl only accepts the secret as a flag, so as typed above it
+   lands in your shell history in plaintext. Start the command with a leading
+   space if your shell ignores space-prefixed commands (zsh
+   `setopt HIST_IGNORE_SPACE`, bash `HISTCONTROL=ignorespace`); otherwise
+   delete the history line afterward, and rotate the secret at console.x.com
+   if you suspect it leaked. (`setup.sh` avoids this with a hidden prompt.)
+
    The consent flow requests `offline.access`, so headless runs refresh
    their own tokens and never re-prompt. Tokens live in `~/.xurl` — for a
    server, authorize locally and copy that directory over.
 
 ## 4. Telegram approvals
 
-Create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`), then:
+Create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`), then
+register it. Use the token-file form so the token stays out of your shell
+history and the process table; the file must persist — OpenClaw stores the
+path and reads it at runtime:
 
 ```sh
-openclaw channels add --channel telegram --token YOUR_BOT_TOKEN
+mkdir -p ~/.openclaw/credentials && chmod 700 ~/.openclaw/credentials
+read -rs token && printf '%s' "$token" > ~/.openclaw/credentials/telegram-bot-token \
+  && chmod 600 ~/.openclaw/credentials/telegram-bot-token && unset token
+openclaw channels add --channel telegram --token-file ~/.openclaw/credentials/telegram-bot-token
 openclaw gateway install
 ```
+
+(The `read -rs` line waits silently — paste the token and press enter.)
 
 Message your new bot once from your own account. It replies with your user
 id and a pairing code; approve it and make yourself the command owner:

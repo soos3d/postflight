@@ -74,9 +74,9 @@ Decide which mode this turn is, in order:
    be posted (including the link) to a temp file and run X's weighting:
 
    ```sh
-   cat > "${TMPDIR:-/tmp}/draft.txt" <<'DRAFT'
+   cat > "${TMPDIR:-/tmp}/draft.txt" <<'XPOSTER_EOF_3f9c1a'
    <paste the draft text here, verbatim>
-   DRAFT
+   XPOSTER_EOF_3f9c1a
    python3 - "${TMPDIR:-/tmp}/draft.txt" <<'PY'
    import re, sys, unicodedata
    text = unicodedata.normalize("NFC", open(sys.argv[1]).read().strip())
@@ -92,6 +92,12 @@ Decide which mode this turn is, in order:
    PY
    ```
 
+   The delimiter is deliberately obscure: draft text derives from fetched
+   (untrusted) content, and a line matching the delimiter would end the
+   heredoc early and run whatever follows as shell commands. If the draft
+   somehow contains that exact line, do not work around it — discard the
+   draft and write a different one.
+
    That is X's real count: every URL weighs 23, emoji and CJK weigh 2,
    everything else 1. If the number is over 280, cut a whole clause (not
    word-by-word shaving) and re-run — two trim cycles maximum, then drop a
@@ -101,8 +107,10 @@ Decide which mode this turn is, in order:
    the number printed by the command above, never one you produced yourself).
    Then:
    - If `telegramTo` is set: send the draft text verbatim via Telegram to that
-     id, followed by: `reply "ship" to post, "skip" to discard, or tell me
-     what to change`.
+     id, then the topic and the source links from the pending file (approval
+     should be an informed decision — the approver needs to see where a link
+     or claim came from), followed by: `reply "ship" to post, "skip" to
+     discard, or tell me what to change`.
    - If not set (draft mode): append the draft to `{baseDir}/state/drafts.md`
      and finish, reporting where the draft was saved. Do NOT create a file in
      `state/pending/` in draft mode — a pending file blocks the next drafting

@@ -81,11 +81,14 @@ Next steps (one-time, interactive; details in the repo README):
        xurl auth oauth2 --app x-poster
        xurl auth default x-poster
        xurl /2/users/me   # prints your handle when it all works
+     (typing the secret inline leaves it in shell history — prefer running
+      scripts/setup.sh, which prompts for it hidden; see docs/SETUP-MANUAL.md)
      (browser fallback instead: openclaw browser open https://x.com and log in,
       then set "postVia": "browser" in the settings file below)
   3. Telegram approvals (optional, enables ship/skip from your phone):
-       create a bot with @BotFather, then:
-       openclaw channels add --channel telegram --token BOT_TOKEN
+       create a bot with @BotFather, save its token to a private file
+       (kept out of shell history; SETUP-MANUAL.md shows the exact commands):
+       openclaw channels add --channel telegram --token-file ~/.openclaw/credentials/telegram-bot-token
        openclaw gateway install
        message the bot once; it replies with your user id and a pairing code:
        openclaw pairing approve telegram <CODE>
