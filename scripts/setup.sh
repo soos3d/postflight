@@ -116,7 +116,7 @@ ensure_repo() {
 step_deps() {
   step "Dependencies"
   local tool missing=()
-  local needed=(git curl jq)
+  local needed=(git curl jq python3)
   [[ $DEV_MODE -eq 0 ]] && needed+=(rsync)
   for tool in "${needed[@]}"; do
     if command -v "$tool" >/dev/null; then ok "$tool"; else missing+=("$tool"); fi

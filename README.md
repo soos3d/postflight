@@ -42,7 +42,7 @@ the third is a personal topic you choose (mine is aviation):
    commentary.
 3. Write one tweet following the voice guide, picking the best of three
    internal candidates, then verify the length by running X's character
-   weighting as a shell one-liner instead of counting in its head.
+   weighting as a python one-liner instead of counting in its head.
 4. Send it to your Telegram: reply `ship` to post, `skip` to discard, or
    describe a change and it revises.
 5. On `ship`, post through the X API v2 (via `xurl`, X's official OAuth CLI),
@@ -64,7 +64,8 @@ Or, if piping curl into bash isn't your thing, clone first and run
 editing). Have three things ready before you start:
 
 - [OpenClaw](https://docs.openclaw.ai) installed and onboarded, on Node
-  22.22+ or 24.15+ (`nvm install 24` settles it)
+  22.22+ or 24.15+ (`nvm install 24` settles it), plus an authenticated
+  `gh` CLI so the agent can read your repos (`gh auth login`)
 - An X account with access to [console.x.com](https://console.x.com/)
   (the wizard tells you the exact three clicks when it gets there)
 - A Telegram bot token from [@BotFather](https://t.me/BotFather) (`/newbot`)
@@ -98,13 +99,20 @@ The defaults describe my account. Three files change that:
   hard rules about what's off limits).
 - **`voice-examples.local.md`** holds 3 to 5 of your own tweets. They outrank
   every other style rule, so the account keeps sounding like you. Local file,
-  gitignored.
+  gitignored. On a headless install this is what carries the voice, so don't
+  skip it.
 - **`styleAccounts`** in `state/settings.json` lists public accounts whose
-  register gets studied during weekly style refreshes: patterns only, never
-  opinions or phrasings, and they're never named in posts. Also local.
+  register gets studied during style refreshes: patterns only, never opinions
+  or phrasings, and they're never named in posts. Also local, and it only
+  does anything when a logged-in browser session on x.com exists.
 
-Posting times, the daily cap, and the timezone the cap counts in live in the
-same settings file; the default schedule targets US engagement windows.
+One path detail: the default install copies the skill into
+`~/.openclaw/workspace/skills/x-poster/`, so that's where the voice file and
+`state/settings.json` live, and edits to the checkout take effect after
+rerunning `./scripts/install.sh` (or install once with `--dev` to symlink
+instead). The daily cap and the timezone it counts in are settings too;
+posting times are cron jobs, so change those by rerunning `./scripts/setup.sh`
+or with `openclaw cron`.
 
 ## The whole tool is five markdown files
 

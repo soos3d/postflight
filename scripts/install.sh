@@ -96,9 +96,10 @@ Next steps (one-time, interactive; details in the repo README):
         the bot: the persistent session only re-reads config when it starts)
   4. Cron (after a supervised test run; times target US engagement windows —
      adjust to your audience and waking hours, and note every draft waits on
-     your Telegram reply):
-       openclaw cron create "30 9 * * *"  "Run the x-poster skill: draft one post (own-work focus) and request approval."  --name x-poster-own-work --session isolated --tz America/New_York
-       openclaw cron create "30 12 * * *" "Run the x-poster skill: draft one post (AI tools/news focus) and request approval." --name x-poster-ai-news --session isolated --tz America/New_York
-       openclaw cron create "0 15 * * *"  "Run the x-poster skill: draft one post (aviation focus per CONTENT.md) and request approval." --name x-poster-aviation --session isolated --tz America/New_York
-       openclaw cron create "0 8 * * 1"   "x-poster maintenance turn: refresh the content backlog per CONTENT.md. Do not draft or publish." --name x-poster-backlog --session isolated --tz America/New_York
+     your Telegram reply). The --channel/--to flags are required: isolated
+     sessions have no default route, so a job without them fails closed:
+       openclaw cron create "30 9 * * *"  "Run the x-poster skill: draft one post (own-work focus) and request approval."  --name x-poster-own-work --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "30 12 * * *" "Run the x-poster skill: draft one post (AI tools/news focus) and request approval." --name x-poster-ai-news --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "0 15 * * *"  "Run the x-poster skill: draft one post (personal-topic slot per CONTENT.md) and request approval." --name x-poster-aviation --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "0 8 * * 1"   "x-poster maintenance turn: refresh the content backlog per CONTENT.md. Do not draft or publish." --name x-poster-backlog --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
 EOF

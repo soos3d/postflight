@@ -16,7 +16,7 @@ body:
     attributes:
       label: Output of ./scripts/setup.sh --check
       description: Paste the full output. It reports every layer without changing anything. Redact your Telegram user id if you prefer.
-      render: text
+      render: shell
     validations:
       required: true
   - type: input

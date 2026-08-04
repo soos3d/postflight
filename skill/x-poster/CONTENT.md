@@ -19,9 +19,9 @@ Alternate content types so the account doesn't repeat itself. Default rotation
 The cron message names the focus for each slot: the first daily run leans
 own-work, the second leans AI tools/news, and the third is the personal slot
 (aviation by default, its own rotation below — personal-slot posts don't
-consume the tech rotation). Multiple
-posts about the same repo are fine and encouraged, but each must use a
-different angle and be spaced at least 4 days apart.
+consume the tech rotation). Multiple posts about the same repo are fine and
+encouraged, but each must use a different angle and be spaced at least
+4 days apart.
 
 ## Own repos
 
