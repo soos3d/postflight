@@ -1,39 +1,110 @@
 # x-openclaw
 
-An [OpenClaw](https://docs.openclaw.ai) skill that keeps my X account active.
-It drafts posts about my open source repos, sends each one to my Telegram, and
-publishes only when I reply `ship`.
+![license](https://img.shields.io/badge/license-MIT-blue)
+
+An [OpenClaw](https://docs.openclaw.ai) skill that keeps your X account
+active. It drafts posts about your open source repos, sends each one to your
+Telegram, and publishes only when you reply `ship`.
 
 I built it because my posting pattern was three tweets in one afternoon, then
 five weeks of silence. Cadence is what grows an account, and cadence is
 exactly the kind of boring discipline a personal agent is good at. What I
 didn't want was a bot posting to my real account unsupervised, so the contract
-is fixed: the agent drafts, I approve, it ships. There is no autonomous mode.
+is fixed: the agent drafts, you approve, it ships. There is no autonomous mode.
+
+The contract in full:
+
+- Drafts are built only from material the agent actually fetched: your
+  commits, releases, and READMEs via the `gh` CLI, plus the Hacker News API.
+  Facts it didn't retrieve don't go in a draft.
+- Publishing requires the exact word `ship` from your Telegram user id while
+  a draft is pending. Anything else is an edit request; anyone else is
+  ignored.
+- Hard caps: three posts a day, drafts expire after 24 hours, and it never
+  replies, likes, follows, or DMs.
+- No build step, no service, no queue. The whole tool is five markdown files;
+  cron, Telegram routing, and model auth come from the platform.
+- Runs headless, so the same install works on a laptop or a 1 GB VPS.
 
 ## The loop
 
-Three times a day, a cron job wakes the agent in an isolated session — each
-slot with its own focus (my open source work, AI tools/news, aviation) and
-timed for when a US audience is actually scrolling:
+Three times a day, a cron job wakes the agent in an isolated session, each
+slot with its own focus and timed for when your audience is actually
+scrolling. Two slots are about your work (open source repos, AI tools/news);
+the third is a personal topic you choose (mine is aviation):
 
 1. Check the post log. Three posts a day maximum, nothing resembling the last
    ten topics.
-2. Gather real material: recent commits, releases, and READMEs from my public
-   repos via the `gh` CLI, plus AI stories from the Hacker News API. Facts it
-   didn't retrieve don't go in a draft. The aviation slot draws on my flying
-   and instructing instead — instructional tips and cool facts, never
-   accident commentary.
+2. Gather real material: recent commits, releases, and READMEs from your
+   public repos via the `gh` CLI, plus AI stories from the Hacker News API.
+   The personal slot draws on whatever you put in `CONTENT.md` instead; mine
+   rotates instructional flying tips and cool facts, never accident
+   commentary.
 3. Write one tweet following the voice guide, picking the best of three
    internal candidates, then verify the length by running X's character
    weighting as a shell one-liner instead of counting in its head.
-4. Send it to my Telegram: reply `ship` to post, `skip` to discard, or
+4. Send it to your Telegram: reply `ship` to post, `skip` to discard, or
    describe a change and it revises.
 5. On `ship`, post through the X API v2 (via `xurl`, X's official OAuth CLI),
    confirm the returned tweet id, log the URL.
 
-Approval means the exact word `ship`, from my Telegram user id, while a draft
-is pending. "ship it" is an edit request. A message from anyone else is
-ignored. Drafts older than 24 hours get archived, never posted.
+<!-- TODO: screenshot of a draft arriving in Telegram and the `ship` reply -->
+
+## Getting started
+
+One command runs everything scriptable and walks you through the two things
+that can't be automated, creating the X app and the Telegram bot:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Soos3D/x-openclaw/main/scripts/setup.sh | bash
+```
+
+Or, if piping curl into bash isn't your thing, clone first and run
+`./scripts/setup.sh` (same script; `--dev` symlinks the skill for live
+editing). Have three things ready before you start:
+
+- [OpenClaw](https://docs.openclaw.ai) installed and onboarded, on Node
+  22.22+ or 24.15+ (`nvm install 24` settles it)
+- An X account with access to [console.x.com](https://console.x.com/)
+  (the wizard tells you the exact three clicks when it gets there)
+- A Telegram bot token from [@BotFather](https://t.me/BotFather) (`/newbot`)
+
+Every step probes real state before acting: it verifies model auth, X auth
+(`/2/users/me` must print your handle), Telegram pairing, and the cron
+routes, and skips whatever already works. That makes it safe to rerun after
+any failure, and rerunning on a finished install is a health check:
+
+```sh
+./scripts/setup.sh --check    # report every layer, change nothing
+```
+
+When it finishes, message your bot "x-poster: draft a post" and reply `skip`
+to watch the loop work before the first cron slot fires. Prefer to run every
+command yourself, or need to debug one layer? The full manual walkthrough is
+in [docs/SETUP-MANUAL.md](docs/SETUP-MANUAL.md).
+
+If the bot's behavior doesn't match an edit you just made to the skill
+files, or it kept an old model after a config change, send `/new` to the
+bot: the persistent session only re-reads everything when it starts.
+
+## Make it yours
+
+The defaults describe my account. Three files change that:
+
+- **`skill/x-poster/CONTENT.md`** is the content config: the slot rotation,
+  the shell commands that gather material, and the angle lists per topic. The
+  aviation section is my personal slot; replace it with any topic you can
+  write about firsthand, keeping the same shape (a rotation of angles plus
+  hard rules about what's off limits).
+- **`voice-examples.local.md`** holds 3 to 5 of your own tweets. They outrank
+  every other style rule, so the account keeps sounding like you. Local file,
+  gitignored.
+- **`styleAccounts`** in `state/settings.json` lists public accounts whose
+  register gets studied during weekly style refreshes: patterns only, never
+  opinions or phrasings, and they're never named in posts. Also local.
+
+Posting times, the daily cap, and the timezone the cap counts in live in the
+same settings file; the default schedule targets US engagement windows.
 
 ## The whole tool is five markdown files
 
@@ -54,14 +125,14 @@ Everything operational comes from the platform:
   "Run the x-poster skill..." --session isolated` gives you a scheduled agent
   with a fresh transcript per run.
 - **Telegram replies route back into the conversation.** The agent messages
-  me, my reply arrives as a normal turn with reply-chain context, and the
+  you, your reply arrives as a normal turn with reply-chain context, and the
   agent acts on it. The approval flow needed zero custom plumbing.
 - **The whole thing runs headless.** API posting plus Telegram approvals
   means no display server anywhere, so the same install works on a laptop or
   a small VPS. (For accounts without a developer app, OpenClaw's managed
   browser profile is the documented fallback: an isolated Chromium you log
   into X once.)
-- **Model auth reuses my Claude subscription** through
+- **Model auth reuses a Claude subscription** through
   `openclaw models auth setup-token`. No separate API bill for a tool that
   runs four short turns a day.
 
@@ -72,12 +143,11 @@ without wincing took most of the design work. `VOICE.md` bans hashtags,
 engagement bait, thread emoji, "excited to announce", and the phrasing tics
 that mark text as machine output. Every post must contain something a reader
 can use: a command, a gotcha, an error message, a number, a link to real
-code. Drafts that fail the test get rewritten before I ever see them.
+code. Drafts that fail the test get rewritten before you ever see them.
 
-The register is calibrated on real developer accounts you pick yourself (a
-local `styleAccounts` setting, kept out of the repo), and 3 to 5 of your own
-tweets in `voice-examples.local.md` outrank everything else, so the account
-still sounds like you. As a side effect, my test run made the case for model
+The register is calibrated on the style accounts and your own tweets from
+"Make it yours" above, so the account still sounds like you rather than
+generically fluent. As a side effect, my test run made the case for model
 choice better than any benchmark: a local 7B model's first draft was
 "Excited about the progress! 🚀 #OpenSource #DevLife". Straight into the
 banned list it went.
@@ -119,42 +189,45 @@ turns, all encoded in the skill files now:
   publish doc at ship time, and `/new` is the reset button whenever the bot
   insists something you already fixed is still broken.
 
-## Getting started
+## Running it on a server
 
-One command runs everything scriptable and walks you through the two things
-that can't be automated — creating the X app and the Telegram bot:
+A laptop install stops working every time the lid closes, so mine now lives
+on a small DigitalOcean VM. Any 1–2 GB Ubuntu box works (Hetzner and Vultr
+too, x86_64 or arm64): the skill posts through the API and approvals go
+through Telegram, so nothing ever needs a display.
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/Soos3D/x-openclaw/main/scripts/setup.sh | bash
-```
-
-Or, if piping curl into bash isn't your thing, clone first and run
-`./scripts/setup.sh` — same script (`--dev` symlinks the skill for live
-editing). Have three things ready before you start:
-
-- [OpenClaw](https://docs.openclaw.ai) installed and onboarded, on Node
-  22.22+ or 24.15+ (`nvm install 24` settles it)
-- An X account with access to [console.x.com](https://console.x.com/) —
-  the wizard tells you the exact three clicks when it gets there
-- A Telegram bot token from [@BotFather](https://t.me/BotFather) (`/newbot`)
-
-Every step probes real state before acting — it verifies model auth, X auth
-(`/2/users/me` must print your handle), Telegram pairing, and the cron
-routes, and skips whatever already works. That makes it safe to rerun after
-any failure, and rerunning on a finished install is a health check:
+Set up on the laptop first anyway. Two auth steps open a browser (the
+claude.ai token approval and the X OAuth consent), and the server can't do
+that; it receives the finished credentials instead. The move is scripted:
 
 ```sh
-./scripts/setup.sh --check    # report every layer, change nothing
+# server: install everything, Ctrl-C at the model-auth prompt
+git clone https://github.com/Soos3D/x-openclaw.git ~/x-openclaw
+cd ~/x-openclaw && ./scripts/setup.sh
+
+# laptop: package credentials and skill state, copy it over
+openclaw gateway stop
+./scripts/migrate-state.sh export
+scp ~/x-poster-state-*.tar.gz poster@SERVER:
+
+# server: import, verify, then finish the wizard (Telegram + cron)
+./scripts/migrate-state.sh import ~/x-poster-state-*.tar.gz
+xurl /2/users/me            # must print your handle
+./scripts/setup.sh
 ```
 
-When it finishes, message your bot "x-poster: draft a post" and reply `skip`
-to watch the loop work before the first cron slot fires. Prefer to run every
-command yourself, or need to debug one layer? The full manual walkthrough is
-in [docs/SETUP-MANUAL.md](docs/SETUP-MANUAL.md).
+One rule matters more than the rest: never have the laptop and the server
+live at the same time. Two gateways fight over the same Telegram bot's
+updates, and two cron sets double-post, because the daily cap is per-machine
+state. [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md) walks the cutover in the safe
+order: provision and harden, migrate, rotate the bot token, run one full
+`ship` round trip from the server, and only then remove the laptop's cron
+jobs and gateway. It also adds a weekly heartbeat cron so silence itself
+becomes a signal.
 
-If the bot's behavior doesn't match an edit you just made to the skill
-files, or it kept an old model after a config change, send `/new` to the
-bot: the persistent session only re-reads everything when it starts.
+Updating later is git only: edit and push from the laptop, then on the
+server `git pull && ./scripts/install.sh` (`state/` is never touched). If
+the running Telegram session ignores an update, send `/new` to the bot.
 
 ## About X's terms
 
@@ -164,6 +237,14 @@ clear of their spam policies. The browser fallback exists for accounts
 without a developer app; that mode sits outside the automation rules, so
 treat it as a stopgap and use it at your own risk.
 
+## Contributing
+
+The interesting contributions here are instructions, not code: voice rules
+that survived real runs, content angles that produced posts worth shipping,
+setup fixes for platforms that broke, a publish doc for another network.
+See [CONTRIBUTING.md](CONTRIBUTING.md); the one non-negotiable is the
+approval gate.
+
 ## License
 
-MIT.
+MIT. See [LICENSE](LICENSE).

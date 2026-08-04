@@ -35,11 +35,8 @@ openclaw onboard        # accept defaults; creates ~/.openclaw + workspace
 
 ## 3. Clone and install the skill
 
-The repo is private, so authenticate git first (either `gh auth login`, or
-add an SSH key to GitHub):
-
 ```sh
-git clone git@github.com:Soos3D/x-openclaw.git ~/x-openclaw
+git clone https://github.com/Soos3D/x-openclaw.git ~/x-openclaw
 cd ~/x-openclaw && ./scripts/setup.sh --check   # see what the box is missing
 ./scripts/setup.sh                              # installs skill + xurl; STOP at the model-auth prompt
 ```
