@@ -110,6 +110,21 @@ The fiddly part, because the developer console has opinions. In order:
    their own tokens and never re-prompt. Tokens live in `~/.xurl` — for a
    server, authorize locally and copy that directory over.
 
+### Optional: media tools
+
+Repo posts are media-first (a demo GIF or code screenshot, with the link
+posted as a reply). The agent generates that media with whatever it finds
+on `PATH`:
+
+```sh
+brew install vhs charmbracelet/tap/freeze   # macOS; both have Linux builds
+```
+
+`vhs` renders terminal demos to GIF, `freeze` screenshots code to PNG.
+Neither is required — without them the skill falls back to existing repo
+assets and finally to text-only posts (the ladder is in CONTENT.md "Media
+recipes") — but the media posts are the point, so install at least one.
+
 ## 4. Telegram approvals
 
 Create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`), then
@@ -156,7 +171,7 @@ Run one turn in draft mode (leave `telegramTo` empty) and read the result in
 `state/drafts.md` against VOICE.md:
 
 ```sh
-openclaw agent --local --agent main -m "x-poster drafting turn: draft one post, own-work focus."
+openclaw agent --local --agent main -m "x-poster drafting turn: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars)."
 ```
 
 Then set `telegramTo`, message your bot "x-poster: draft a post", and reply
@@ -164,6 +179,12 @@ Then set `telegramTo`, message your bot "x-poster: draft a post", and reply
 after a full draft → `ship` → verified permalink round trip should you
 register the cron jobs; the installer prints the exact commands (three
 drafting turns a day plus a weekly backlog refresh, isolated sessions).
+The drafting messages are slot-numbered and pillar-agnostic — which pillar
+a slot gets comes from the weekly grid in CONTENT.md, so rescheduling
+never means editing cron messages. If you installed before the pillar
+system, your jobs still carry the old per-topic messages: rerun
+`./scripts/setup.sh` and it detects the drift and recreates them in place
+(same schedule, same route), or delete and recreate them by hand.
 The example times target US engagement windows (anchored to
 America/New_York so they track US DST) — shift them to fit your audience
 and your own waking hours, since every draft waits on your reply.

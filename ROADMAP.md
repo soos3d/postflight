@@ -25,28 +25,22 @@ Voice caveat: draft quality has only been validated on Claude. The first
 draft we ever got from a weak model was banned-slop; expect to tune
 `VOICE.md` compliance per model.
 
-### 2. Media posts
+### 2. Media posts — SHIPPED 2026-08-04
 
-Text posts are boring now. Add image support. Research is done and the
-path is clear:
+Shipped bigger than planned: not just image support but media-first repo
+posts with the link in a self-reply (link-card posts are the format X
+suppresses hardest), plus a weighted pillar system replacing the flat
+topic rotation. The mechanics live in PUBLISH-API.md (media upload, the
+reply form, the `media.write` caveat) and CONTENT.md (pillar grid, media
+recipes, degradation ladder); the Telegram approval message carries the
+rendered media, so approving stays an informed decision.
 
-- `xurl media upload <img>` drives X's v2 chunked upload natively (4 MB
-  chunks, auto-detects type), and the media id goes into the existing
-  `POST /2/tweets` body as `media.media_ids` (max 4). Caveats: the upload
-  command's stdout mixes JSON with a human-readable trailer, and OAuth
-  tokens minted by older xurl versions may lack the `media.write` scope —
-  re-consent fixes that.
-- Non-negotiable: the Telegram approval message must show the actual image
-  (`openclaw message send --media <path>`), so approving stays an informed
-  decision. The agent-side `sendMessage` action is disabled by default and
-  reported flaky in issues; the CLI path is the documented reliable one.
-- Sourcing rules go in `CONTENT.md`: only images the agent can verify
-  (repo assets, generated diagrams), never stock art.
-- Cost note that applies to text posts too: X's free tier ended Feb 2026
-  and posting is pay-per-use. The pricing page lists $0.015 per post and
-  $0.20 per post containing a URL, but observed billing on this account is
-  ~$0.02 per post, links included. Media upload itself has no listed
-  price — check the usage meter after the first real upload.
+Cost note that applies to text posts too: X's free tier ended Feb 2026
+and posting is pay-per-use. The pricing page lists $0.015 per post and
+$0.20 per post containing a URL, but observed billing on this account is
+~$0.02 per post, links included. Media upload itself has no listed
+price — check the usage meter after the first real upload. The
+link-in-reply format bills a repo post as two posts.
 
 ## Next
 
@@ -68,8 +62,10 @@ being ignored in some versions.
 ### 5. Thread support
 
 Multi-tweet drafts approved as one unit, published as a reply chain
-(`reply.in_reply_to_tweet_id`). Needs per-tweet length verification and an
-explicit failure rule for a thread that dies half-posted.
+(`reply.in_reply_to_tweet_id`). The building blocks shipped with media
+posts: the reply form, per-tweet length verification, and the half-posted
+failure rule all exist for the two-tweet post+link package — threads
+generalize that package to N tweets.
 
 ## Later
 
@@ -97,7 +93,9 @@ doesn't have. Parked until there's a clean headless path.
 
 - **Autonomous posting** — the approval gate is the product. No.
 - **Replies, likes, follows, DMs** — the skill touches nothing on X except
-  publishing your own approved post.
+  publishing your own approved package. (The one exception: the link reply
+  under the skill's own just-published post, approved as part of the same
+  package. Replies to anyone else stay off the table.)
 - **Gemini subscription backend** — Google ended consumer Gemini CLI OAuth
   in June 2026; only the API-key path remains, which defeats the
   no-API-bill design.

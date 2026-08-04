@@ -19,8 +19,10 @@ guessing.
 
 The agent never posts without an explicit `ship` from the allowlisted
 Telegram user, and there is no autonomous mode. PRs that weaken the approval
-gate, raise the default caps, or add engagement features (replies, likes,
-follows) will be closed without much ceremony.
+gate, raise the default caps, or add engagement features (replies to other
+accounts, likes, follows) will be closed without much ceremony. The link
+reply under the account's own just-published post is part of the approved
+package, not an engagement feature — it is the one reply the skill makes.
 
 ## Testing your change
 

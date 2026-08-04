@@ -32,28 +32,36 @@ were tuned on Claude) — and five markdown files in
 | File | Job |
 |---|---|
 | `SKILL.md` | The workflow: modes, caps, approval semantics, failure rules |
-| `VOICE.md` | Writing rules and style anchors |
-| `CONTENT.md` | Where material comes from and how topics rotate |
-| `PUBLISH-API.md` | How to post through the X API with xurl |
+| `VOICE.md` | Writing rules, style anchors, and the personal-post register |
+| `CONTENT.md` | The pillar schedule, media recipes, and where material comes from |
+| `PUBLISH-API.md` | How to post through the X API with xurl, media upload and the link reply included |
 | `PUBLISH-BROWSER.md` | Browser fallback for accounts without a developer app |
 
 Each cron slot runs the same loop:
 
 1. Check the post log. Three posts a day maximum, nothing resembling the
-   last ten topics.
+   last ten topics. Look up the slot's pillar in the weekly grid.
 2. Gather real material: commits, releases, and READMEs from your public
    repos via the `gh` CLI, AI stories from the Hacker News API, or your
-   own notes for the personal slot. Facts the agent didn't fetch don't go
-   in a draft.
-3. Write one tweet following the voice rules, then verify the length by
-   running X's real character weighting as a python one-liner.
-4. Send it to your Telegram. Reply `ship` to post, `skip` to discard, or
+   own notes for the personal pillars. Facts the agent didn't fetch don't
+   go in a draft.
+3. Write the post following the voice rules. For a repo post that means a
+   media-first package: a demo (GIF, code screenshot) with no URL in the
+   body, plus the repo link as a separate reply text — each verified
+   against X's real character weighting as a python one-liner.
+4. Send it to your Telegram, media included, so you approve the post as it
+   will actually appear. Reply `ship` to post, `skip` to discard, or
    describe a change and it revises.
 5. On `ship`, post through the X API v2 (via `xurl`, X's official OAuth
-   CLI), confirm the returned tweet id, log the URL.
+   CLI): upload the media, publish the tweet, confirm the returned id,
+   then publish the link as the first reply under it. Log the URLs.
 
-Two slots are about your work (open source repos, AI tools/news); the
-third is a personal topic you choose. Mine is aviation.
+Content runs on weighted pillars instead of a flat rotation — at three
+posts a day that's 21 weekly slots: repo demos (8-9, media-first with the
+link in the reply, because link-card posts are the format X suppresses
+hardest), insights (4, pure text), aviation (3), florida-outdoors (3-4,
+from a photo library), and build-in-public (2). The two personal pillars
+are mine; `CONTENT.md` shows the shape to swap in your own.
 
 ## Quickstart
 
@@ -95,11 +103,12 @@ Afterwards:
 
 The defaults describe my account. Three files change that:
 
-- **`skill/x-poster/CONTENT.md`** is the content config: the slot
-  rotation, the shell commands that gather material, and the angle lists
-  per topic. The aviation section is my personal slot; replace it with any
-  topic you can write about firsthand, keeping the same shape (a rotation
-  of angles plus hard rules about what's off limits).
+- **`skill/x-poster/CONTENT.md`** is the content config: the pillar grid,
+  the shell commands that gather material, the media recipes, and the
+  angle lists per pillar. The aviation and florida-outdoors sections are
+  my personal pillars; replace them with topics you can write about
+  firsthand, keeping the same shape (a pillar of angles plus hard rules
+  about what's off limits).
 - **`voice-examples.local.md`** holds 3 to 5 of your own tweets. They
   outrank every other style rule, so the account keeps sounding like you.
   Local file, gitignored. Don't skip it.
@@ -123,8 +132,10 @@ instead. Posting times are cron jobs; change them by rerunning
 
 ## Guardrails
 
-- Publishes one approved post and does nothing else on X. No replies,
-  likes, follows, or DMs, ever.
+- Publishes one approved package and does nothing else on X: the post,
+  plus — for repo posts — one reply under that same just-published post
+  carrying the link, approved together as a unit. No replies to anyone
+  else, no likes, follows, or DMs, ever.
 - Publishing requires the exact word `ship` from your Telegram user id
   while a draft is pending. Anything else is an edit request; anyone else
   is ignored. Drafts expire after 24 hours.
@@ -185,14 +196,18 @@ keeps it well clear of their spam policies. The browser fallback exists
 for accounts without a developer app; that mode sits outside the
 automation rules, so treat it as a stopgap and use it at your own risk.
 
+On cost: X's API posting is pay-per-use (observed ~$0.02/post), and the
+link-in-reply format means a repo post bills as two posts. That's the
+price of not shipping the format X suppresses hardest.
+
 ## Contributing
 
 The interesting contributions here are instructions, not code: voice rules
 that survived real runs, content angles that produced posts worth
 shipping, setup fixes for platforms that broke, a publish doc for another
 network. See [CONTRIBUTING.md](CONTRIBUTING.md); the one non-negotiable is
-the approval gate. What's coming next — a Codex/ChatGPT subscription
-option, media posts, engagement readback — lives in [ROADMAP.md](ROADMAP.md).
+the approval gate. What's coming next — engagement readback, thread
+support, a second network — lives in [ROADMAP.md](ROADMAP.md).
 
 ## License
 
