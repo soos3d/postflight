@@ -344,6 +344,22 @@ EOF
   xurl auth default "$XURL_APP"
   handle="$(x_handle)" || die "auth completed but /2/users/me failed — check the app package on console.x.com"
   ok "posting as @$handle"
+  echo "  Note: media upload needs the media.write scope. If the first upload"
+  echo "  returns 403, re-consent with: xurl auth oauth2 --app $XURL_APP"
+}
+
+# ---------- step 5b: media tools (optional) ----------
+
+# Builds posts are media-first (CONTENT.md "Media recipes"). Missing tools
+# are never fatal: the skill degrades to text-only posts on its own.
+step_media_tools() {
+  step "Media tools (optional, for builds-post media)"
+  local t any=0
+  for t in vhs freeze; do
+    if command -v "$t" >/dev/null; then ok "$t present"; any=1; fi
+  done
+  [[ $any -eq 1 ]] \
+    || todo "neither vhs nor freeze installed — builds posts ship text-only until one exists (see CONTENT.md Media recipes)"
 }
 
 # ---------- step 6: telegram ----------
@@ -426,12 +442,15 @@ cron_expr_for() {
   esac
 }
 
+# The three drafting messages are slot-numbered and pillar-agnostic: which
+# pillar a slot gets is the weekly grid in CONTENT.md, so schedule changes
+# never require touching cron again.
 cron_msg_for() {
   case "$1" in
-    x-poster-own-work) printf 'Run the x-poster skill: draft one post (own-work focus) and request approval.' ;;
-    x-poster-ai-news)  printf 'Run the x-poster skill: draft one post (AI tools/news focus) and request approval.' ;;
-    x-poster-aviation) printf 'Run the x-poster skill: draft one post (personal-topic slot per CONTENT.md) and request approval.' ;;
-    x-poster-backlog)  printf 'x-poster maintenance turn: refresh the content backlog per CONTENT.md. Do not draft or publish.' ;;
+    x-poster-own-work) printf 'Run the x-poster skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
+    x-poster-ai-news)  printf 'Run the x-poster skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
+    x-poster-aviation) printf 'Run the x-poster skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
+    x-poster-backlog)  printf 'x-poster maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections. Do not draft or publish.' ;;
   esac
 }
 
@@ -449,20 +468,69 @@ cron_missing() {
 
 hhmm_to_expr() { printf '%s %s * * *' "${1#*:}" "${1%%:*}"; }
 
+# One job's JSON object from the listing, or empty. Field names vary across
+# OpenClaw releases, so callers probe alternatives and treat "not found" as
+# "cannot compare", never as license to guess.
+cron_job_json() {
+  openclaw cron list --json 2>/dev/null | jq -c --arg n "$1" '.jobs[]? | select(.name==$n)' 2>/dev/null
+}
+
+# Jobs created by pre-pillar versions carry the old slot messages. Creating
+# jobs is idempotent by name, so a rerun never updates them — this detects
+# the drift and recreates the job in place, preserving its schedule and
+# route. Silent when the listing exposes no message field: a migration that
+# cannot read the old message must not delete a working job.
+cron_migrate_messages() {
+  local name job cur want expr tz to jid
+  to="$(telegram_to)"
+  for name in "${CRON_NAMES[@]}"; do
+    job="$(cron_job_json "$name")"
+    [[ -n "$job" ]] || continue
+    cur="$(jq -r '.message // .msg // .prompt // empty' <<<"$job")"
+    [[ -n "$cur" ]] || continue
+    want="$(cron_msg_for "$name")"
+    [[ "$cur" == "$want" ]] && continue
+    if ! interactive; then
+      todo "cron $name still has the pre-pillar message — rerun setup.sh (no --check) to migrate"
+      continue
+    fi
+    expr="$(jq -r '.expr // .schedule // .cron // empty' <<<"$job")"
+    tz="$(jq -r '.tz // .timezone // empty' <<<"$job")"
+    jid="$(jq -r '.id // empty' <<<"$job")"
+    if [[ -z "$expr" || -z "$tz" || -z "$to" ]]; then
+      todo "cron $name needs the new pillar-slot message but its schedule could not be read — recreate it by hand (openclaw cron rm, then the command in docs/SETUP-MANUAL.md)"
+      continue
+    fi
+    openclaw cron rm "${jid:-$name}" >/dev/null
+    openclaw cron create "$expr" "$want" \
+      --name "$name" --session isolated --tz "$tz" \
+      --channel telegram --to "$to" >/dev/null
+    ok "cron $name migrated to the pillar-slot message ($expr @ $tz)"
+  done
+}
+
 step_cron() {
   step "Cron schedule"
   local missing
   missing="$(cron_missing)"
-  if [[ -z "$missing" ]]; then ok "all four jobs registered"; return 0; fi
-  if ! interactive; then todo "missing cron jobs: $(tr '\n' ' ' <<<"$missing")"; return 0; fi
+  if [[ -z "$missing" ]]; then
+    ok "all four jobs registered"
+    cron_migrate_messages
+    return 0
+  fi
+  if ! interactive; then
+    todo "missing cron jobs: $(tr '\n' ' ' <<<"$missing")"
+    cron_migrate_messages
+    return 0
+  fi
   local to tz t1 t2 t3
   to="$(telegram_to)"
   [[ -n "$to" ]] || die "finish the Telegram step first — cron alerts need a destination"
   tz="$(ask_default "  Timezone" "$(jq -r '.timezone // "America/New_York"' "$(settings_file)" 2>/dev/null || printf 'America/New_York')")"
   echo "  Defaults target US engagement windows (9:30 / 12:30 / 15:00 ET)."
-  t1="$(ask_hhmm "  Slot 1 (own work) HH:MM" "09:30")"
-  t2="$(ask_hhmm "  Slot 2 (AI tools/news) HH:MM" "12:30")"
-  t3="$(ask_hhmm "  Slot 3 (personal topic) HH:MM" "15:00")"
+  t1="$(ask_hhmm "  Slot 1 (morning) HH:MM" "09:30")"
+  t2="$(ask_hhmm "  Slot 2 (midday) HH:MM" "12:30")"
+  t3="$(ask_hhmm "  Slot 3 (afternoon) HH:MM" "15:00")"
   EXPR_OWN="$(hhmm_to_expr "$t1")"
   EXPR_NEWS="$(hhmm_to_expr "$t2")"
   EXPR_AVIATION="$(hhmm_to_expr "$t3")"
@@ -474,6 +542,7 @@ step_cron() {
       --channel telegram --to "$to" >/dev/null
     ok "cron $name ($(cron_expr_for "$name") @ $tz)"
   done
+  cron_migrate_messages
 }
 
 # ---------- step 8: voice ----------
@@ -507,6 +576,7 @@ step_skill
 step_xurl
 step_model
 step_x
+step_media_tools
 step_telegram
 step_cron
 step_voice
