@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a change to the skill, the setup flow, or the docs
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What did you hit in a real run that the current skill doesn't handle?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Which file would change and how. Note that anything weakening the ship-approval gate or adding engagement features (replies, likes, follows) is out of scope by design.
+    validations:
+      required: true
+  - type: dropdown
+    id: pr
+    attributes:
+      label: Would you PR it?
+      options:
+        - Yes, with feedback on the approach
+        - No, just flagging it
+    validations:
+      required: true

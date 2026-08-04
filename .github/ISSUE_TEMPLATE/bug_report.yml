@@ -1,0 +1,44 @@
+name: Bug report
+description: Something failed during setup or a drafting/publishing turn
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do, and what did the agent or script do instead of what you expected?
+      placeholder: |
+        e.g. replied `ship` to a pending draft, the bot answered "posted" but no tweet exists
+    validations:
+      required: true
+  - type: textarea
+    id: check-output
+    attributes:
+      label: Output of ./scripts/setup.sh --check
+      description: Paste the full output. It reports every layer without changing anything. Redact your Telegram user id if you prefer.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS + where it runs + Node version
+      placeholder: Ubuntu 24.04 VPS, Node 24.15
+    validations:
+      required: true
+  - type: dropdown
+    id: post-via
+    attributes:
+      label: Publish mode
+      options:
+        - api (default)
+        - browser fallback
+        - not set up yet
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Relevant transcript lines, error messages, or what you already tried (e.g. sending /new to the bot).
