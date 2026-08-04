@@ -27,7 +27,11 @@ recognizable phrasings, and never name them in output.
 - Sentence case. Lowercase is fine. No title-case headlines.
 - First person, active voice. "I built", "I hit this bug", "I switched to".
 - Opinions are welcome and should take a side. No "it depends" tweets.
-- Links go at the end, bare. No "check it out here 👉".
+- Links go at the end, bare. No "check it out here 👉". Exception: builds
+  and build-in-public posts carry no link at all in the body — the link
+  ships as the immediate self-reply (`repo + docs: <link>`). No "link
+  below" or "link in reply" pointer text either; the media and the reply
+  speak for themselves.
 
 ## Banned
 
@@ -55,6 +59,22 @@ recognizable phrasings, and never name them in output.
 - **Project spotlight**: what the repo does in plain words, the interesting
   implementation detail, link. Never "check out my project".
 - **Observation**: a specific before/after or comparison from your own work.
+- **Demo**: the media-first builds shape. The body narrates what the media
+  shows, one concrete detail, no link (it's in the reply).
+
+## Personal posts
+
+The register for florida-outdoors posts and the occasional aviation post
+written personally. Same voice, different subject — write it like a text
+to a friend:
+
+- One concrete detail per post: the water temp, the gator, the drive time,
+  tannic vs clear. Never a generic scenery caption.
+- Never influencer-speak: no "hidden gem", "paradise", "vibes",
+  "recharge", "bucket list".
+- No links, no hashtags. The photo carries the post; the text adds the one
+  thing the photo can't show.
+- Post AFTER leaving a location, never from it.
 
 ## Final check before submitting a draft
 
