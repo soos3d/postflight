@@ -16,14 +16,17 @@ mode.
 ## How it works
 
 OpenClaw is a personal AI agent that runs on your own machine. It connects
-a model (Claude, through your existing subscription) to messaging channels
+a model (Claude or ChatGPT/Codex, through a subscription you already have)
+to messaging channels
 like Telegram, runs scheduled jobs, and is extended with **skills**:
 folders of markdown instructions the agent reads and follows. No code, no
 build step, no service to deploy.
 
 This project is one skill. The platform supplies the moving parts — cron
 wakes the agent, Telegram carries drafts and approvals back and forth,
-model auth reuses your Claude subscription (so no API to set up and pay separately) — and five markdown files in
+model auth reuses your Claude or ChatGPT/Codex subscription (so no API to
+set up and pay separately; the setup wizard asks which — the voice rules
+were tuned on Claude) — and five markdown files in
 `skill/x-poster/` tell the agent what to do:
 
 | File | Job |
@@ -188,7 +191,8 @@ The interesting contributions here are instructions, not code: voice rules
 that survived real runs, content angles that produced posts worth
 shipping, setup fixes for platforms that broke, a publish doc for another
 network. See [CONTRIBUTING.md](CONTRIBUTING.md); the one non-negotiable is
-the approval gate.
+the approval gate. What's coming next — a Codex/ChatGPT subscription
+option, media posts, engagement readback — lives in [ROADMAP.md](ROADMAP.md).
 
 ## License
 

@@ -25,7 +25,12 @@ x-poster should show `✓ ready`.
 ## 2. Point the agent at a real model
 
 Small local models write exactly the slop VOICE.md bans, so use a frontier
-model. With a Claude subscription there's no API bill:
+model. Either a Claude or a ChatGPT/Codex subscription works — no API bill
+in both cases. The voice rules were tuned and validated on Claude; the
+OpenAI path is supported but its draft quality hasn't been through the same
+runs yet.
+
+**Claude subscription:**
 
 ```sh
 openclaw models auth setup-token --provider anthropic
@@ -33,7 +38,24 @@ openclaw config set agents.defaults.model.primary "anthropic/claude-fable-5"
 ```
 
 `setup-token` needs a real terminal — it walks you through a browser approval
-on claude.ai and stores the token. Verify the wiring end to end:
+on claude.ai and stores the token.
+
+**ChatGPT/Codex subscription:**
+
+```sh
+openclaw models auth login --provider openai    # add --device-code on a headless box
+openclaw models list --provider openai          # pick the subscription tier from this list
+openclaw config set agents.defaults.model.primary "openai/gpt-5.6-sol"
+```
+
+Prefer `openai/gpt-5.6-sol` if listed (older OpenClaw releases only show
+`gpt-5.6-terra` — use that instead). Never set plain `openai/gpt-5.6`: that
+is the API-key alias, and it silently bills a developer account instead of
+your subscription. For the same reason, after any `openclaw doctor --fix`
+re-check `openclaw models status` — released versions have rewritten
+Codex-subscription routes to API-billed ones (openclaw#79461).
+
+Whichever provider you chose, verify the wiring end to end:
 
 ```sh
 openclaw agent --local --agent main -m "Reply with exactly: auth-ok"

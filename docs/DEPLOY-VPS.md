@@ -43,6 +43,11 @@ cd ~/x-poster && ./scripts/setup.sh --check   # see what the box is missing
 
 Ctrl-C when it reaches the model auth step — those credentials migrate from
 the laptop instead (`setup-token` wants a browser the server doesn't have).
+Exception: on the ChatGPT/Codex path the wizard uses a device-code flow on
+headless boxes (it prints a URL + one-time code you approve from any
+browser), so OpenAI users can finish model auth directly on the server and
+skip that part of the migration. xurl tokens and skill state still migrate
+either way.
 
 ## 4. Migrate credentials and state from the laptop
 
@@ -61,7 +66,7 @@ On the **server**:
 cd ~/x-poster
 ./scripts/migrate-state.sh import ~/x-poster-state-*.tar.gz
 xurl /2/users/me            # must print your handle
-openclaw models status      # must show the anthropic profile
+openclaw models status      # must show your provider profile (anthropic or openai)
 rm ~/x-poster-state-*.tar.gz
 ```
 
@@ -86,6 +91,12 @@ user service on Linux. Make it survive logout and reboots:
 sudo loginctl enable-linger poster
 openclaw gateway status && openclaw doctor
 ```
+
+Codex-subscription installs: run plain `openclaw doctor` freely, but treat
+`doctor --fix` with care — released versions have rewritten subscription
+model routes to API-billed ones (openclaw#79461). After any `--fix`, confirm
+`openclaw models status` still shows a subscription model (`gpt-5.6-sol` /
+`-terra`), not plain `openai/gpt-5.6`.
 
 ## 6. Verify, then cut over
 

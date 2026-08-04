@@ -18,7 +18,11 @@ REPO_DIR="${X_POSTER_DIR:-$HOME/x-poster}"
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
 XURL_APP="x-poster"
 XURL_VERSION="${XURL_VERSION:-1.3.1}"
-MODEL="anthropic/claude-fable-5"
+MODEL_ANTHROPIC="anthropic/claude-fable-5"
+# OpenAI ids, best first. gpt-5.6-sol is the Codex-subscription tier but only
+# newer OpenClaw releases list it; plain "openai/gpt-5.6" is deliberately
+# absent — it is the API-key alias and would bill a developer account.
+MODEL_OPENAI_CANDIDATES=(openai/gpt-5.6-sol openai/gpt-5.6-terra openai/gpt-5.5)
 
 CHECK_ONLY=0
 DEV_MODE=0
@@ -245,21 +249,67 @@ step_xurl() {
 
 # ---------- step 4: model auth ----------
 
-anthropic_ready() {
-  openclaw models status --json 2>/dev/null | jq -e '
-    ([.auth.providers[]? | select(.provider=="anthropic") | .profiles.count] | add // 0) > 0
-    and (.defaultModel | startswith("anthropic/"))' >/dev/null
+provider_ready() {
+  openclaw models status --json 2>/dev/null | jq -e --arg p "$1" '
+    ([.auth.providers[]? | select(.provider==$p) | .profiles.count] | add // 0) > 0
+    and (.defaultModel | startswith($p + "/"))' >/dev/null
+}
+
+# The catalog varies by OpenClaw release (gpt-5.6-sol appears only in newer
+# ones), so resolve the default model against what this install actually
+# lists — a name the scheduler can't resolve fails every cron run.
+openai_pick_model() {
+  local listed m
+  listed="$(openclaw models list --provider openai 2>/dev/null | awk '{print $1}')"
+  for m in "${MODEL_OPENAI_CANDIDATES[@]}"; do
+    grep -qxF "$m" <<<"$listed" && { printf '%s' "$m"; return 0; }
+  done
+  return 1
+}
+
+auth_anthropic() {
+  echo "  A browser approval on claude.ai will open."
+  openclaw models auth setup-token --provider anthropic < "$TTY"
+  openclaw config set agents.defaults.model.primary "$MODEL_ANTHROPIC"
+  provider_ready anthropic || die "model auth still not detected after setup-token"
+  ok "anthropic auth + default model ($MODEL_ANTHROPIC)"
+}
+
+auth_openai() {
+  local flags=() model
+  # A box with no display (typical VPS) can't take the localhost OAuth
+  # callback; device-code prints a URL + one-time code to approve from
+  # any browser instead.
+  [[ "$(uname -s)" == "Linux" && -z "${DISPLAY:-}" ]] && flags+=(--device-code)
+  echo "  OAuth against your ChatGPT account will start."
+  openclaw models auth login --provider openai ${flags[@]+"${flags[@]}"} < "$TTY"
+  model="$(openai_pick_model)" \
+    || die "no known Codex-subscription model in 'openclaw models list --provider openai' — update OpenClaw and rerun"
+  openclaw config set agents.defaults.model.primary "$model"
+  provider_ready openai || die "model auth still not detected after login"
+  ok "openai auth + default model ($model)"
+  # Released versions have rewritten Codex-subscription model routes to
+  # API-billed ones during doctor --fix (openclaw#79461, #87650).
+  echo "  Caution: after any 'openclaw doctor --fix', re-check the default model"
+  echo "  ('openclaw models status') — it must NOT become plain openai/gpt-5.6,"
+  echo "  which is the API-billed alias, not your subscription."
 }
 
 step_model() {
-  step "Model auth (Claude subscription, no API bill)"
-  if anthropic_ready; then ok "anthropic auth + default model configured"; return 0; fi
+  step "Model auth (Claude or ChatGPT/Codex subscription, no API bill)"
+  local p
+  for p in anthropic openai; do
+    if provider_ready "$p"; then ok "$p auth + default model configured"; return 0; fi
+  done
   if ! interactive; then todo "model auth not configured (run without --check, in a terminal)"; return 0; fi
-  echo "  A browser approval on claude.ai will open."
-  openclaw models auth setup-token --provider anthropic < "$TTY"
-  openclaw config set agents.defaults.model.primary "$MODEL"
-  anthropic_ready || die "model auth still not detected after setup-token"
-  ok "anthropic auth + default model ($MODEL)"
+  echo "  Which subscription should draft the posts?"
+  echo "    1) Claude (Anthropic) — the voice rules were tuned and validated here"
+  echo "    2) ChatGPT/Codex (OpenAI) — supported; draft quality not yet validated"
+  case "$(ask_default "  Choice" "1")" in
+    1) auth_anthropic ;;
+    2) auth_openai ;;
+    *) die "answer 1 or 2" ;;
+  esac
 }
 
 # ---------- step 5: X credentials ----------
