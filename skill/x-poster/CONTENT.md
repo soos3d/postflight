@@ -1,5 +1,11 @@
 # Content sourcing
 
+This file is the content config. The two tech slots below travel to any
+account; the third daily slot ("Aviation") is the author's personal topic.
+If this isn't the author's install, replace that section with a topic the
+account owner can write about firsthand, keeping the same shape: a rotation
+of angles plus hard rules about what's off limits.
+
 ## Rotation
 
 Alternate content types so the account doesn't repeat itself. Default rotation
@@ -11,8 +17,9 @@ Alternate content types so the account doesn't repeat itself. Default rotation
 4. project spotlight or dev log (a different repo than last time)
 
 The cron message names the focus for each slot: the first daily run leans
-own-work, the second leans AI tools/news, and the third is aviation (its own
-rotation below — aviation posts don't consume the tech rotation). Multiple
+own-work, the second leans AI tools/news, and the third is the personal slot
+(aviation by default, its own rotation below — personal-slot posts don't
+consume the tech rotation). Multiple
 posts about the same repo are fine and encouraged, but each must use a
 different angle and be spaced at least 4 days apart.
 
@@ -70,8 +77,9 @@ the list clears that bar, fall back to an own-repo angle instead.
 
 ## Aviation
 
-The user is an experienced pilot and flight instructor; the daily aviation
-slot draws on that. Rotate through these angles (check recent `topic` fields
+The personal slot, written for the author's install: the user is an
+experienced pilot and flight instructor, and the daily aviation slot draws
+on that. Rotate through these angles (check recent `topic` fields
 in the post log, same as the tech rotation):
 
 1. instructional tip — the kind of thing students consistently get wrong,

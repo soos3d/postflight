@@ -380,7 +380,7 @@ cron_msg_for() {
   case "$1" in
     x-poster-own-work) printf 'Run the x-poster skill: draft one post (own-work focus) and request approval.' ;;
     x-poster-ai-news)  printf 'Run the x-poster skill: draft one post (AI tools/news focus) and request approval.' ;;
-    x-poster-aviation) printf 'Run the x-poster skill: draft one post (aviation focus per CONTENT.md) and request approval.' ;;
+    x-poster-aviation) printf 'Run the x-poster skill: draft one post (personal-topic slot per CONTENT.md) and request approval.' ;;
     x-poster-backlog)  printf 'x-poster maintenance turn: refresh the content backlog per CONTENT.md. Do not draft or publish.' ;;
   esac
 }
@@ -412,7 +412,7 @@ step_cron() {
   echo "  Defaults target US engagement windows (9:30 / 12:30 / 15:00 ET)."
   t1="$(ask_hhmm "  Slot 1 (own work) HH:MM" "09:30")"
   t2="$(ask_hhmm "  Slot 2 (AI tools/news) HH:MM" "12:30")"
-  t3="$(ask_hhmm "  Slot 3 (aviation) HH:MM" "15:00")"
+  t3="$(ask_hhmm "  Slot 3 (personal topic) HH:MM" "15:00")"
   EXPR_OWN="$(hhmm_to_expr "$t1")"
   EXPR_NEWS="$(hhmm_to_expr "$t2")"
   EXPR_AVIATION="$(hhmm_to_expr "$t3")"

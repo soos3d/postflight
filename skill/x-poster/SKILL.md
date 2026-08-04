@@ -1,6 +1,6 @@
 ---
 name: x-poster
-description: Draft and publish X (Twitter) posts about the user's open source work, AI tools, and aviation (flying/instructing). Drafts always go to the user for approval before posting. Invoke on cron messages that mention x-poster (drafting or backlog/style maintenance), when the user asks for a tweet draft, or when the user replies ship/skip/edit to a pending draft.
+description: Draft and publish X (Twitter) posts about the user's open source work, AI tools, and a personal topic configured in CONTENT.md (aviation by default). Drafts always go to the user for approval before posting. Invoke on cron messages that mention x-poster (drafting or backlog/style maintenance), when the user asks for a tweet draft, or when the user replies ship/skip/edit to a pending draft.
 ---
 
 # x-poster
