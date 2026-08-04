@@ -140,3 +140,9 @@ that word. `ship it`, `just shipped v2`, or anything longer is NOT a command.
 - If publishing fails twice: stop and report the error. Never leave a post
   half-verified — if you cannot confirm the tweet exists, say so explicitly.
 - Never write credentials or tokens into any state file.
+- Never edit the instruction files in this folder (SKILL.md, VOICE.md,
+  CONTENT.md, PUBLISH-*.md, settings.example.json). Writing under `state/`
+  is your job; the rules are not. If a rule seems wrong or caused a bad
+  draft, tell the user exactly what to change and why — fixes arrive
+  through git, and an edit made here is silently overwritten by the next
+  install anyway.
