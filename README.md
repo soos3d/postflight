@@ -1,4 +1,4 @@
-# x-poster
+# x-poster (Twitter poster via OpenClaw)
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
