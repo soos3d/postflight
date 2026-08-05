@@ -486,7 +486,7 @@ cron_migrate_messages() {
   for name in "${CRON_NAMES[@]}"; do
     job="$(cron_job_json "$name")"
     [[ -n "$job" ]] || continue
-    cur="$(jq -r '.message // .msg // .prompt // empty' <<<"$job")"
+    cur="$(jq -r '[.payload.message?, .message?, .msg?, .prompt?] | map(select(type=="string")) | first // empty' <<<"$job")"
     [[ -n "$cur" ]] || continue
     want="$(cron_msg_for "$name")"
     [[ "$cur" == "$want" ]] && continue
@@ -494,14 +494,14 @@ cron_migrate_messages() {
       todo "cron $name still has the pre-pillar message — rerun setup.sh (no --check) to migrate"
       continue
     fi
-    expr="$(jq -r '.expr // .schedule // .cron // empty' <<<"$job")"
-    tz="$(jq -r '.tz // .timezone // empty' <<<"$job")"
+    expr="$(jq -r '[.schedule.expr?, .expr?, .schedule?, .cron?] | map(select(type=="string")) | first // empty' <<<"$job")"
+    tz="$(jq -r '[.schedule.tz?, .tz?, .timezone?] | map(select(type=="string")) | first // empty' <<<"$job")"
     jid="$(jq -r '.id // empty' <<<"$job")"
-    if [[ -z "$expr" || -z "$tz" || -z "$to" ]]; then
+    if [[ -z "$expr" || -z "$tz" || -z "$to" || -z "$jid" ]]; then
       todo "cron $name needs the new pillar-slot message but its schedule could not be read — recreate it by hand (openclaw cron rm, then the command in docs/SETUP-MANUAL.md)"
       continue
     fi
-    openclaw cron rm "${jid:-$name}" >/dev/null
+    openclaw cron rm "$jid" >/dev/null
     openclaw cron create "$expr" "$want" \
       --name "$name" --session isolated --tz "$tz" \
       --channel telegram --to "$to" >/dev/null
