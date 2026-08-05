@@ -6,6 +6,14 @@ logged into X, so it requires a machine with a display server or headless
 Chromium. You only ever compose and submit a single post. Nothing else on
 x.com.
 
+This mode publishes a single text post only — the media-first package
+(media attachment plus the link reply) is API-mode only. If the pending
+draft's `format` is `media+reply` or `text+reply`: post only the body, with
+the reply's link folded back in at the end of the body text, re-verified
+against the length check in SKILL.md before typing it. No media is
+attached, no reply is posted, and the report to the user says the package
+was degraded to a single link-bearing post because `postVia` is `browser`.
+
 1. `browser status` — if the browser isn't ready, report and stop.
 2. Open `https://x.com/compose/post` in the managed profile.
 3. Take a snapshot. If you see a login form, "Sign in", or the compose box is

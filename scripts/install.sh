@@ -57,7 +57,7 @@ else
   SKILL_SRC="$SKILL_DEST"
 fi
 
-mkdir -p "$SKILL_SRC/state/pending" "$SKILL_SRC/state/skipped"
+mkdir -p "$SKILL_SRC/state/pending" "$SKILL_SRC/state/skipped" "$SKILL_SRC/state/media"
 touch "$SKILL_SRC/state/post-log.jsonl" "$SKILL_SRC/state/backlog.md"
 if [[ ! -f "$SKILL_SRC/state/settings.json" ]]; then
   cp "$SKILL_SRC/settings.example.json" "$SKILL_SRC/state/settings.json"
@@ -101,8 +101,8 @@ Next steps (one-time, interactive; details in the repo README):
      adjust to your audience and waking hours, and note every draft waits on
      your Telegram reply). The --channel/--to flags are required: isolated
      sessions have no default route, so a job without them fails closed:
-       openclaw cron create "30 9 * * *"  "Run the x-poster skill: draft one post (own-work focus) and request approval."  --name x-poster-own-work --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "30 12 * * *" "Run the x-poster skill: draft one post (AI tools/news focus) and request approval." --name x-poster-ai-news --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "0 15 * * *"  "Run the x-poster skill: draft one post (personal-topic slot per CONTENT.md) and request approval." --name x-poster-aviation --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "0 8 * * 1"   "x-poster maintenance turn: refresh the content backlog per CONTENT.md. Do not draft or publish." --name x-poster-backlog --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "30 9 * * *"  "Run the x-poster skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval." --name x-poster-own-work --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "30 12 * * *" "Run the x-poster skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval." --name x-poster-ai-news --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "0 15 * * *"  "Run the x-poster skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval." --name x-poster-aviation --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "0 8 * * 1"   "x-poster maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections. Do not draft or publish." --name x-poster-backlog --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
 EOF

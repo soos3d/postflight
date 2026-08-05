@@ -20,6 +20,11 @@ ufw allow OpenSSH && ufw enable          # everything the skill does is outbound
 apt update && apt install -y unattended-upgrades git jq rsync curl
 ```
 
+Optional but worth it: install `vhs` and/or `freeze` (Linux release
+binaries on their GitHub pages) so repo posts get their demo media —
+generation is headless-safe. Without them the skill degrades to text-only
+posts (CONTENT.md "Media recipes").
+
 Log back in as `poster` for everything below. Optional but recommended:
 disable root login and password auth in `/etc/ssh/sshd_config`.
 
