@@ -51,7 +51,7 @@ else
   mkdir -p "$SKILL_DEST"
   rsync -a --delete \
     --exclude 'state/' \
-    --exclude 'voice-examples.local.md' \
+    --exclude '*.local.md' \
     "$SKILL_SRC/" "$SKILL_DEST/"
   echo "Copied skill to $SKILL_DEST"
   SKILL_SRC="$SKILL_DEST"
@@ -69,6 +69,7 @@ cat <<EOF
 Skill files: $SKILL_SRC
 Settings:    $SKILL_SRC/state/settings.json
 Voice anchor (add 3-5 of your own tweets): $SKILL_SRC/voice-examples.local.md
+Your pillars (copy pillars.example.md here and edit): $SKILL_SRC/pillars.local.md
 
 Next steps (one-time, interactive; details in the repo README):
   1. Model auth (Claude subscription reuse; needs a real terminal):

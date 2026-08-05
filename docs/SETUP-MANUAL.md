@@ -156,14 +156,18 @@ Finally, put the same user id in `skill/x-poster/state/settings.json` as
 draft, and while it's empty the skill runs in draft mode — writes drafts to
 `state/drafts.md`, sends nothing, posts nothing.
 
-## 5. Make it sound like you
+## 5. Make it yours
 
-Two local files the repo never sees:
+Three local files the repo never sees (full walkthrough in
+[CUSTOMIZE.md](CUSTOMIZE.md)):
 
-- `state/settings.json` → `styleAccounts`: a few public accounts whose
-  register you want studied during style refreshes.
+- `pillars.local.md` (copy `pillars.example.md`, edit, delete its
+  TEMPLATE line): your content pillars and weekly schedule. Without it
+  the skill runs the generic default schedule.
 - `voice-examples.local.md`: 3 to 5 of your own tweets. These outrank
   everything else, so the output stays yours rather than generically fluent.
+- `state/settings.json` → `styleAccounts`: a few public accounts whose
+  register you want studied during style refreshes.
 
 ## 6. Test, then schedule
 

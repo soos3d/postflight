@@ -145,8 +145,13 @@ The laptop is the dev machine; the server only consumes git:
 ```sh
 # laptop: edit, commit, push
 # server:
-cd ~/x-poster && git pull && ./scripts/install.sh   # state/ is never touched
+cd ~/x-poster && git pull && ./scripts/install.sh   # state/ and *.local.md are never touched
 ```
+
+Personal config (`pillars.local.md`, `voice-examples.local.md`) is
+untracked, so it doesn't travel through git: it reaches a new box via
+`migrate-state.sh` (which carries every `*.local.md`) or a plain `scp`
+of the files into `~/.openclaw/workspace/skills/x-poster/`.
 
 If the persistent Telegram session ignores an update, send `/new` to the
 bot — sessions only re-read config and skill files when they start.

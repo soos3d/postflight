@@ -545,7 +545,40 @@ step_cron() {
   cron_migrate_messages
 }
 
-# ---------- step 8: voice ----------
+# ---------- step 8: pillars ----------
+
+# The pillar overlay is optional: absent means the generic default
+# schedule in CONTENT.md. An unedited copy of the template never drives
+# drafting — CONTENT.md ignores the file while the TEMPLATE marker line
+# is still in it.
+step_pillars() {
+  step "Content pillars"
+  local overlay example
+  overlay="$(skill_dir)/pillars.local.md"
+  example="$(skill_dir)/pillars.example.md"
+  if [[ -f "$overlay" ]]; then
+    if grep -q '^<!-- TEMPLATE' "$overlay"; then
+      todo "pillars.local.md is still the unedited template — edit it (docs/CUSTOMIZE.md), or delete it to run the default schedule"
+    else
+      ok "custom pillars configured (pillars.local.md)"
+    fi
+    return 0
+  fi
+  if ! interactive; then
+    todo "no custom pillars — running the default builds/insights schedule (copy pillars.example.md to pillars.local.md to customize)"
+    return 0
+  fi
+  local yn
+  yn="$(ask_default "  Add your own content pillars now? (y/N)" "n")"
+  if [[ "$yn" =~ ^[Yy] ]]; then
+    cp "$example" "$overlay"
+    todo "edit $overlay (see docs/CUSTOMIZE.md), delete its TEMPLATE line, then send /new to your bot"
+  else
+    ok "using the default pillar schedule (customize later via docs/CUSTOMIZE.md)"
+  fi
+}
+
+# ---------- step 9: voice ----------
 
 step_voice() {
   step "Voice"
@@ -579,5 +612,6 @@ step_x
 step_media_tools
 step_telegram
 step_cron
+step_pillars
 step_voice
 summary
