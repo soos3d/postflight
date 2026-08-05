@@ -121,7 +121,10 @@ Try in this order, per project type:
 1. **CLI project**: if `command -v vhs` succeeds, write a short `.tape`
    file (under ~15 seconds of terminal action) demonstrating the command,
    render to GIF with `vhs <tape>`. Keep the tape output well under the
-   15 MB GIF cap.
+   15 MB GIF cap. vhs (0.11) rejects absolute paths in the tape's
+   `Output` line — "Invalid command" on a path starting with `/` — so
+   use a bare filename in the tape and run `vhs` from inside
+   `{baseDir}/state/media/` (or `mv` the file there after rendering).
 2. **Code-centric**: if `command -v freeze` succeeds, fetch the
    load-bearing function's file via `gh api`, save it under
    `{baseDir}/state/media/`, and screenshot it with
