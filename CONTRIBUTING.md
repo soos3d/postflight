@@ -1,6 +1,6 @@
 # Contributing
 
-x-poster is five markdown files and three shell scripts. Most useful
+x-poster is a handful of markdown files and three shell scripts. Most useful
 contributions are edits to instructions, not code, and the bar for both is
 the same: the change came from a real run, not from reading the file and
 guessing.
@@ -45,5 +45,5 @@ the bot after editing, or your change silently isn't being tested.
 
 - Small and focused. Say which run or failure motivated the change.
 - Commit format: `<type>: <description>` (feat, fix, docs, chore).
-- Never commit anything from `state/`, `voice-examples.local.md`, or `.env`;
+- Never commit anything from `state/`, any `*.local.md` file, or `.env`;
   they're gitignored for a reason.

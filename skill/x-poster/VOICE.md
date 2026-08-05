@@ -27,11 +27,11 @@ recognizable phrasings, and never name them in output.
 - Sentence case. Lowercase is fine. No title-case headlines.
 - First person, active voice. "I built", "I hit this bug", "I switched to".
 - Opinions are welcome and should take a side. No "it depends" tweets.
-- Links go at the end, bare. No "check it out here 👉". Exception: builds
-  and build-in-public posts carry no link at all in the body — the link
-  ships as the immediate self-reply (`repo + docs: <link>`). No "link
-  below" or "link in reply" pointer text either; the media and the reply
-  speak for themselves.
+- Links go at the end, bare. No "check it out here 👉". Exception: posts
+  from a `link: reply` pillar (builds and friends) carry no link at all
+  in the body — the link ships as the immediate self-reply
+  (`repo + docs: <link>`). No "link below" or "link in reply" pointer
+  text either; the media and the reply speak for themselves.
 
 ## Banned
 
@@ -64,12 +64,13 @@ recognizable phrasings, and never name them in output.
 
 ## Personal posts
 
-The register for florida-outdoors posts and the occasional aviation post
-written personally. Same voice, different subject — write it like a text
-to a friend:
+The register for pillars declared `register: personal` in the pillar
+config (CONTENT.md or pillars.local.md), and for the occasional post from
+another pillar written personally. Same voice, different subject — write
+it like a text to a friend:
 
-- One concrete detail per post: the water temp, the gator, the drive time,
-  tannic vs clear. Never a generic scenery caption.
+- One concrete detail per post: the water temp, the trail mileage, the
+  drive time, what the light did at 7am. Never a generic scenery caption.
 - Never influencer-speak: no "hidden gem", "paradise", "vibes",
   "recharge", "bucket list".
 - No links, no hashtags. The photo carries the post; the text adds the one

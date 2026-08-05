@@ -1,6 +1,6 @@
 ---
 name: x-poster
-description: Draft and publish X (Twitter) posts on a weighted pillar schedule (own-repo demos with media, insights, and personal topics configured in CONTENT.md). Drafts always go to the user for approval before posting. Invoke on cron messages that mention x-poster (drafting or backlog/style maintenance), when the user asks for a tweet draft, or when the user replies ship/skip/edit to a pending draft.
+description: Draft and publish X (Twitter) posts on a weighted pillar schedule (own-repo demos with media, insights, and any personal pillars configured per install in CONTENT.md / pillars.local.md). Drafts always go to the user for approval before posting. Invoke on cron messages that mention x-poster (drafting or backlog/style maintenance), when the user asks for a tweet draft, or when the user replies ship/skip/edit to a pending draft.
 ---
 
 # x-poster
@@ -69,32 +69,35 @@ Decide which mode this turn is, in order:
    (include the id and the reply text) and stop. If any other pending draft
    remains after the sweep, report that and stop. Also delete files in
    `{baseDir}/state/media/` older than 7 days that no pending file
-   references (never touch `state/media/photos/` — that's the user's photo
-   library, not yours to clean).
+   references. Never delete anything under `state/media/photos/` or under
+   any directory named by a pillar's `media: photos:<dir>` property —
+   those are the user's photo libraries, not yours to clean.
 2. **Check the cap.** Count entries in `{baseDir}/state/post-log.jsonl` dated
    today (in `timezone`). If count >= `maxPerDay`, report that and stop.
-3. **Pick the pillar.** The cron message names the slot number; look up
-   today's weekday and that slot in the CONTENT.md pillar grid (including
-   its fallback rule). For a manual request with no slot, use the
-   furthest-behind rule in CONTENT.md. Then pick the topic within the
-   pillar per CONTENT.md (angle cycle for builds, angle rotation for
-   aviation), skipping anything resembling the last 10 entries in the post
-   log.
+3. **Pick the pillar.** First resolve the active pillar set: read
+   `{baseDir}/pillars.local.md` if it exists, per CONTENT.md "Pillar
+   configuration" — otherwise CONTENT.md's defaults apply. The cron
+   message names the slot number; look up today's weekday and that slot
+   in the active weekly grid (including its fallback rule). For a manual
+   request with no slot, use the furthest-behind rule in CONTENT.md. Then
+   pick the topic within the pillar per its section (the angle cycle for
+   `source: repos` pillars, the pillar's own angle rotation otherwise),
+   skipping anything resembling the last 10 entries in the post log.
 4. **Gather material.** Use the shell commands in CONTENT.md (`gh`, HN API).
    Only use facts you actually retrieved. Never invent features, numbers, or
    links.
-5. **Generate media** (builds, build-in-public, and florida-outdoors slots).
-   Follow CONTENT.md "Media recipes": preferred recipe for the project
-   type, then the degradation ladder. Output goes to
-   `{baseDir}/state/media/` under a name you construct
-   (`<YYYYMMDD-HHmm>-<repo-slug>.<ext>`); florida-outdoors uses a photo
-   from `state/media/photos/` instead of generating one. Validate size caps
-   before accepting a file. If the ladder bottoms out, the draft becomes
-   `text+reply` and the pending file records why.
+5. **Generate media** (pillars whose `media:` is not `none`). For
+   `media: generated`, follow CONTENT.md "Media recipes": preferred
+   recipe for the project type, then the degradation ladder. Output goes
+   to `{baseDir}/state/media/` under a name you construct
+   (`<YYYYMMDD-HHmm>-<repo-slug>.<ext>`). For `media: photos:<dir>`, pick
+   an unused photo from `{baseDir}/<dir>` instead of generating one.
+   Validate size caps before accepting a file. If the ladder bottoms out,
+   the draft becomes `text+reply` and the pending file records why.
 6. **Write the draft.** Follow VOICE.md exactly. Write 3 candidate drafts
    internally, keep the best one. Aim for 200-270 weighted characters; 280
    is a hard cap, not a target. A short draft is fine — never pad toward
-   the cap. For builds and build-in-public the draft is two texts: the
+   the cap. For a `link: reply` pillar the draft is two texts: the
    **body** (the demo — no URL, no link-pointer phrasing) and the **reply**
    (`repo + docs: <link>`, or `repo: <link>` without docs). All other
    pillars produce a single body and no reply.
@@ -226,8 +229,10 @@ that word. `ship it`, `just shipped v2`, or anything longer is NOT a command.
   half-posted rule).
 - Never write credentials or tokens into any state file.
 - Never edit the instruction files in this folder (SKILL.md, VOICE.md,
-  CONTENT.md, PUBLISH-*.md, settings.example.json). Writing under `state/`
-  is your job; the rules are not. If a rule seems wrong or caused a bad
+  CONTENT.md, PUBLISH-*.md, settings.example.json, pillars.example.md) —
+  and never edit `pillars.local.md` either: it is the user's
+  configuration, not state. Writing under `state/` is your job; the
+  rules are not. If a rule seems wrong or caused a bad
   draft, tell the user exactly what to change and why — fixes arrive
   through git, and an edit made here is silently overwritten by the next
   install anyway.

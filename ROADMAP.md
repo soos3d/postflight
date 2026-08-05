@@ -25,7 +25,17 @@ Voice caveat: draft quality has only been validated on Claude. The first
 draft we ever got from a weak model was banned-slop; expect to tune
 `VOICE.md` compliance per model.
 
-### 2. Media posts — SHIPPED 2026-08-04
+### 2. Per-install pillar config — SHIPPED 2026-08-05
+
+The pillar schedule moved out of the tracked files: CONTENT.md now ships
+a generic default set (builds / insights / build-in-public) and an
+optional untracked `pillars.local.md` overlay carries an install's own
+pillars — copy `pillars.example.md`, edit, done (docs/CUSTOMIZE.md).
+Pillar behavior in SKILL.md is property-driven (`media:`, `link:`,
+`register:`, `source:`), so custom pillars need no instruction edits,
+and `git pull` never conflicts with personalization.
+
+### 3. Media posts — SHIPPED 2026-08-04
 
 Shipped bigger than planned: not just image support but media-first repo
 posts with the link in a self-reply (link-card posts are the format X
@@ -44,22 +54,22 @@ link-in-reply format bills a repo post as two posts.
 
 ## Next
 
-### 3. Engagement readback
+### 4. Engagement readback
 
 The Monday maintenance turn reads `public_metrics` for the last posts and
 appends a short "what worked" note to the backlog, so angle selection learns
 from results. A stats digest to Telegram falls out of the same fetch almost
 for free.
 
-### 4. Per-slot model overrides
+### 5. Per-slot model overrides
 
 OpenClaw's `openclaw cron edit <id> --model <ref>` lets each cron slot run a
 different model: cheap model for the Monday backlog refresh, strong model
-for drafting. Mostly a documentation task once provider choice (item 2)
-lands. Needs a live check first — openclaw#28905 reports cron overrides
+for drafting. Mostly a documentation task now that provider choice
+(item 1) has shipped. Needs a live check first — openclaw#28905 reports cron overrides
 being ignored in some versions.
 
-### 5. Thread support
+### 6. Thread support
 
 Multi-tweet drafts approved as one unit, published as a reply chain
 (`reply.in_reply_to_tweet_id`). The building blocks shipped with media
@@ -69,7 +79,7 @@ generalize that package to N tweets.
 
 ## Later
 
-### 6. Second network: Bluesky
+### 7. Second network: Bluesky
 
 A new `PUBLISH-BLUESKY.md` following the same shape as the existing publish
 docs. Bluesky's token API needs no OAuth dance, which makes it the easiest
@@ -77,14 +87,14 @@ second network. Mastodon would follow the same pattern.
 [CONTRIBUTING.md](CONTRIBUTING.md) already invites publish docs for other
 networks — this is a good first contribution.
 
-### 7. Skip/edit feedback loop
+### 8. Skip/edit feedback loop
 
 When the owner skips a draft or asks for an edit, log the reason to a state
 file that future drafting turns read. The agent is forbidden from editing
 its own instruction files, so learning accumulates in `state/`, and proven
 lessons get promoted into `VOICE.md` by a human through git.
 
-### 8. Style refresh for headless installs
+### 9. Style refresh for headless installs
 
 `styleAccounts` study currently needs a browser session, which a VPS install
 doesn't have. Parked until there's a clean headless path.

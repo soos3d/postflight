@@ -26,7 +26,7 @@ This project is one skill. The platform supplies the moving parts — cron
 wakes the agent, Telegram carries drafts and approvals back and forth,
 model auth reuses your Claude or ChatGPT/Codex subscription (so no API to
 set up and pay separately; the setup wizard asks which — the voice rules
-were tuned on Claude) — and five markdown files in
+were tuned on Claude) — and a handful of markdown files in
 `skill/x-poster/` tell the agent what to do:
 
 | File | Job |
@@ -43,8 +43,8 @@ Each cron slot runs the same loop:
    last ten topics. Look up the slot's pillar in the weekly grid.
 2. Gather real material: commits, releases, and READMEs from your public
    repos via the `gh` CLI, AI stories from the Hacker News API, or your
-   own notes for the personal pillars. Facts the agent didn't fetch don't
-   go in a draft.
+   own notes and photos for any personal pillars you've added. Facts the
+   agent didn't fetch don't go in a draft.
 3. Write the post following the voice rules. For a repo post that means a
    media-first package: a demo (GIF, code screenshot) with no URL in the
    body, plus the repo link as a separate reply text — each verified
@@ -57,11 +57,12 @@ Each cron slot runs the same loop:
    then publish the link as the first reply under it. Log the URLs.
 
 Content runs on weighted pillars instead of a flat rotation — at three
-posts a day that's 21 weekly slots: repo demos (8-9, media-first with the
-link in the reply, because link-card posts are the format X suppresses
-hardest), insights (4, pure text), aviation (3), florida-outdoors (3-4,
-from a photo library), and build-in-public (2). The two personal pillars
-are mine; `CONTENT.md` shows the shape to swap in your own.
+posts a day that's 21 weekly slots. The shipped defaults: repo demos (8,
+media-first with the link in the reply, because link-card posts are the
+format X suppresses hardest), insights (10, pure text), and
+build-in-public (3). Personal pillars — a hobby backed by a photo
+library, a craft you teach — are per-install and live in one untracked
+file; see [docs/CUSTOMIZE.md](docs/CUSTOMIZE.md).
 
 ## Quickstart
 
@@ -101,14 +102,14 @@ Afterwards:
 
 ## Make it yours
 
-The defaults describe my account. Three files change that:
+Everything personal lives in untracked local files — `git pull` never
+conflicts with your customization. The full walkthrough is
+[docs/CUSTOMIZE.md](docs/CUSTOMIZE.md); the short version:
 
-- **`skill/x-poster/CONTENT.md`** is the content config: the pillar grid,
-  the shell commands that gather material, the media recipes, and the
-  angle lists per pillar. The aviation and florida-outdoors sections are
-  my personal pillars; replace them with topics you can write about
-  firsthand, keeping the same shape (a pillar of angles plus hard rules
-  about what's off limits).
+- **`pillars.local.md`** (copy `pillars.example.md` and edit) holds your
+  content pillars and weekly schedule: your topics, their weights, which
+  ones carry photos or links. Without it the skill runs a generic
+  repo-demos + insights schedule that works for any developer account.
 - **`voice-examples.local.md`** holds 3 to 5 of your own tweets. They
   outrank every other style rule, so the account keeps sounding like you.
   Local file, gitignored. Don't skip it.
@@ -124,10 +125,11 @@ first draft I got from a local 7B model was "Excited about the progress!
 🚀 #OpenSource #DevLife". That file exists to prevent exactly that.
 
 One path detail: the default install copies the skill into
-`~/.openclaw/workspace/skills/x-poster/`, so that's where the voice file
-and `state/settings.json` live. Edits to the checkout take effect after
-rerunning `./scripts/install.sh`, or install once with `--dev` to symlink
-instead. Posting times are cron jobs; change them by rerunning
+`~/.openclaw/workspace/skills/x-poster/`, so that's where the local files
+and `state/settings.json` live; `install.sh` never touches `state/` or
+`*.local.md` there. Edits to tracked files in the checkout take effect
+after rerunning `./scripts/install.sh`, or install once with `--dev` to
+symlink instead. Posting times are cron jobs; change them by rerunning
 `./scripts/setup.sh` or with `openclaw cron`.
 
 ## Guardrails

@@ -59,7 +59,11 @@ do_export() {
   skill="$(resolved_skill_dir)"
   [[ -d "$skill/state" ]] || die "skill state not found at $skill/state"
   cp -R "$skill/state" "$staging/skill-state"
-  [[ -f "$skill/voice-examples.local.md" ]] && cp "$skill/voice-examples.local.md" "$staging/"
+  local lf
+  for lf in "$skill"/*.local.md; do
+    [[ -f "$lf" ]] || continue
+    cp "$lf" "$staging/"
+  done
 
   umask 077
   tar czf "$out" -C "$staging" .
@@ -113,7 +117,11 @@ do_import() {
   local skill="$WORKSPACE/skills/x-poster"
   [[ -d "$skill" ]] || die "skill not installed at $skill — run scripts/setup.sh first, then re-import"
   place_dir "$staging/skill-state" "$skill/state"
-  [[ -f "$staging/voice-examples.local.md" ]] && cp "$staging/voice-examples.local.md" "$skill/"
+  local lf
+  for lf in "$staging"/*.local.md; do
+    [[ -f "$lf" ]] || continue
+    cp "$lf" "$skill/"
+  done
 
   say "Imported. Verify before going live:"
   say "  xurl /2/users/me                      # X auth followed the move"
