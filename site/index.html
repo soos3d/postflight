@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postflight — drafts on schedule, publishes on your word</title>
+<meta name="description" content="An OpenClaw skill that drafts 3 posts a day from your real work and ships only when you reply ship. There is no autonomous mode.">
+<link rel="canonical" href="https://soos3d.github.io/postflight/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Postflight — drafts on schedule, publishes on your word">
+<meta property="og:description" content="An OpenClaw skill that drafts 3 posts a day from your real work and ships only when you reply ship. There is no autonomous mode.">
+<meta property="og:url" content="https://soos3d.github.io/postflight/">
+<meta property="og:image" content="https://soos3d.github.io/postflight/assets/social-card.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <span class="wordmark">Postflight</span>
+    <nav aria-label="Primary">
+      <a href="#how">How it works</a>
+      <a href="#limits">Honest limits</a>
+      <a class="btn btn-ghost" href="https://github.com/soos3d/postflight">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">An <a href="https://docs.openclaw.ai">OpenClaw</a> skill</p>
+        <h1>Drafts on schedule.<br>Publishes on your word.</h1>
+        <p class="lede">
+          Three times a day it drafts a post about your open source work,
+          sends it to your Telegram, and publishes only when you reply
+          <code>ship</code>. There is no autonomous mode.
+        </p>
+
+        <div class="install">
+          <label for="install-cmd" class="install-label">Install</label>
+          <div class="install-row">
+            <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/soos3d/postflight/main/scripts/setup.sh | bash</code>
+            <button type="button" class="copy-btn" data-copy="#install-cmd">Copy</button>
+          </div>
+        </div>
+
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://github.com/soos3d/postflight">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+            Star on GitHub
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/soos3d/postflight#quickstart">Read the quickstart</a>
+        </div>
+        <p class="fineprint">MIT licensed. Runs on your machine or a $6 VPS.</p>
+      </div>
+
+      <!-- TODO(demo): replace this whole <figure> with the real recording once
+           docs/assets/approval-flow.png (or .gif) exists:
+
+             <figure class="demo">
+               <img src="assets/approval-flow.png" width="..." height="..."
+                    alt="A Telegram thread: the bot sends a draft, the owner replies ship, the bot confirms with the post link.">
+               <figcaption>The whole interface.</figcaption>
+             </figure>
+
+           A real phone screenshot beats this mockup. Keep the width/height
+           attributes so the page reserves space and doesn't shift on load. -->
+      <figure class="demo" aria-label="Illustration of the approval flow in Telegram">
+        <div class="thread" role="img" aria-label="A Telegram thread. The bot sends a draft post. The owner replies ship. The bot confirms with a link to the published post.">
+          <div class="bubble bot">
+            <span class="bubble-meta">Postflight · 09:30</span>
+            <p>Draft for the 09:30 slot (pillar: insights)</p>
+            <p class="draft">xurl parses <code>get</code> as an endpoint, not a verb. So <code>xurl get /2/users/me</code> returns <code>{}</code> and "request failed" with perfectly good auth. Empty body, no HTTP status = malformed command, never expired tokens.</p>
+            <span class="bubble-meta">271/280 · ship, skip, or tell me what to change</span>
+          </div>
+          <div class="bubble me">
+            <p><code>ship</code></p>
+          </div>
+          <div class="bubble bot">
+            <span class="bubble-meta">Postflight · 09:31</span>
+            <p>Posted. <span class="link-ish">x.com/i/status/…</span></p>
+          </div>
+        </div>
+        <figcaption>The whole interface: a draft arrives, you reply <code>ship</code>, it posts.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="pillars" aria-labelledby="pillars-h">
+    <div class="wrap">
+      <h2 id="pillars-h" class="section-h">Why this one is different</h2>
+      <div class="pillar-grid">
+
+        <article class="pillar">
+          <svg class="pillar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 12 2 2 4-4"/><path d="M12 3 4 6v6c0 4.4 3.4 8.1 8 9 4.6-.9 8-4.6 8-9V6l-8-3Z"/></svg>
+          <h3>Supervised, not autonomous</h3>
+          <p>
+            Publishing requires the exact word <code>ship</code> from your
+            Telegram account. The approval gate isn't a setting you can turn
+            off. It's the product, and it's the reason this uses the official
+            API instead of evading it.
+          </p>
+        </article>
+
+        <article class="pillar">
+          <svg class="pillar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+          <h3>Anti-slop voice</h3>
+          <p>
+            Hashtags, engagement bait, and "excited to announce" are banned in
+            writing. Every post has to carry something usable: a command, a
+            gotcha, a number, or real code. Your own tweets outrank every
+            other style rule.
+          </p>
+        </article>
+
+        <article class="pillar">
+          <svg class="pillar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="4" width="20" height="7" rx="1.5"/><rect x="2" y="13" width="20" height="7" rx="1.5"/><path d="M6 7.5h.01M6 16.5h.01"/></svg>
+          <h3>Runs on what you have</h3>
+          <p>
+            No SaaS and no separate model bill: auth reuses the Claude or
+            ChatGPT subscription you already pay for. Your laptop or a 1 GB
+            VPS both work, because approvals go through Telegram and posting
+            goes through the API.
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <h2 id="how-h" class="section-h">The daily loop</h2>
+      <p class="section-sub">Each cron slot runs the same five steps.</p>
+      <ol class="steps">
+        <li>
+          <h3>Check the budget</h3>
+          <p>Three posts a day maximum, nothing resembling the last ten topics. Look up the slot's pillar in the weekly grid.</p>
+        </li>
+        <li>
+          <h3>Gather real material</h3>
+          <p>Commits, releases, and READMEs from your public repos via the <code>gh</code> CLI, AI stories from the Hacker News API, your own notes and photos. Facts the agent didn't fetch don't go in a draft.</p>
+        </li>
+        <li>
+          <h3>Write the post</h3>
+          <p>Following the voice rules. A repo post is media-first: a demo GIF or code screenshot with no URL in the body, plus the repo link as a separate reply. Both verified against X's real character weighting.</p>
+        </li>
+        <li>
+          <h3>Send it to Telegram</h3>
+          <p>Media included, so you approve the post as it will actually appear. Reply <code>ship</code> to post, <code>skip</code> to discard, or describe a change and it revises.</p>
+        </li>
+        <li>
+          <h3>On <code>ship</code>, publish</h3>
+          <p>Through the X API v2 via xurl, X's official OAuth CLI: upload the media, publish, confirm the returned id, then publish the link as the first reply. Log the URLs.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="limits" class="limits" aria-labelledby="limits-h">
+    <div class="wrap">
+      <h2 id="limits-h" class="section-h">Honest limits</h2>
+      <p class="section-sub">The things a landing page usually leaves out.</p>
+      <ul class="limit-list">
+        <li>
+          <strong>The guardrails are instructions, not technical controls.</strong>
+          Fetched content is treated as data and a source carrying instructions
+          aimed at the agent gets discarded, but that's a rule the model
+          follows. The approval gate exists so anything that slips through
+          still has to get past you.
+        </li>
+        <li>
+          <strong>Posting costs money.</strong>
+          X's free tier ended in February 2026. Observed billing is about
+          $0.02 per post, and a repo post bills as two because the link ships
+          as a reply.
+        </li>
+        <li>
+          <strong>Draft quality is only proven on Claude.</strong>
+          That's what the voice rules were tuned against. The ChatGPT/Codex
+          path works, but expect to tune voice compliance yourself.
+        </li>
+        <li>
+          <strong>One account, one approver.</strong>
+          Multi-account fights the per-machine state model, and the laptop and
+          the server must never run at the same time or you'll double-post.
+        </li>
+      </ul>
+      <p class="limits-more">
+        Full detail in
+        <a href="https://github.com/soos3d/postflight/blob/main/docs/HOW-IT-WORKS.md#guardrails">How it works</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap closing-inner">
+      <h2>Try one loop without posting anything</h2>
+      <p>Run the wizard, message your bot <code>postflight: draft a post</code>, and reply <code>skip</code>. You'll see the whole thing run with nothing published.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/soos3d/postflight">Get it on GitHub</a>
+        <a class="btn btn-ghost" href="https://github.com/soos3d/postflight/blob/main/ROADMAP.md">Roadmap</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <p>MIT licensed. Built by <a href="https://github.com/soos3d">soos3d</a>.</p>
+    <nav aria-label="Footer">
+      <a href="https://github.com/soos3d/postflight">Source</a>
+      <a href="https://github.com/soos3d/postflight/blob/main/docs/SETUP-MANUAL.md">Manual setup</a>
+      <a href="https://github.com/soos3d/postflight/blob/main/docs/DEPLOY-VPS.md">Deploy to a VPS</a>
+      <a href="https://github.com/soos3d/postflight/blob/main/CONTRIBUTING.md">Contributing</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(function (btn) {
+  btn.addEventListener('click', async function () {
+    var target = document.querySelector(btn.dataset.copy);
+    if (!target) return;
+    try {
+      await navigator.clipboard.writeText(target.textContent.trim());
+      var original = btn.textContent;
+      btn.textContent = 'Copied';
+      btn.classList.add('is-copied');
+      setTimeout(function () {
+        btn.textContent = original;
+        btn.classList.remove('is-copied');
+      }, 2000);
+    } catch (err) {
+      btn.textContent = 'Press ⌘C';
+    }
+  });
+});
+</script>
+</body>
+</html>
