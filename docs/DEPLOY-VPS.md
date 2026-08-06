@@ -179,6 +179,25 @@ The laptop is the dev machine. The server only consumes git:
 cd ~/postflight && git pull && ./scripts/install.sh   # state/ and *.local.md are never touched
 ```
 
+### Upgrading from x-poster
+
+The skill was called x-poster before v1.0.0. Pulling that rename needs one
+extra step, `setup.sh`, because the cron jobs carry the old name too:
+
+```sh
+cd ~/postflight && git pull
+./scripts/install.sh    # moves state/ and *.local.md to skills/postflight/
+./scripts/setup.sh      # renames the cron jobs, keeping times and routes
+openclaw cron list      # confirm the count is unchanged
+```
+
+`install.sh` moves the old skill directory to
+`~/.openclaw/workspace/x-poster-pre-rename-backup/` rather than deleting it,
+and leaves it there. Remove it once a draft loop has run.
+
+Skipping `setup.sh` leaves cron jobs whose messages name a skill that no
+longer exists, and drafting stops silently. Running it twice is safe.
+
 Personal config (`pillars.local.md`, `voice-examples.local.md`) is
 untracked, so it doesn't travel through git. It reaches a new box two ways:
 

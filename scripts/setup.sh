@@ -481,6 +481,51 @@ cron_job_json() {
   openclaw cron list --json 2>/dev/null | jq -c --arg n "$1" '.jobs[]? | select(.name==$n)' 2>/dev/null
 }
 
+# Field readers for one job object. Kept together so the name-rename and the
+# message-drift migrations can never disagree about where a field lives.
+cron_field_msg() { jq -r '[.payload.message?, .message?, .msg?, .prompt?] | map(select(type=="string")) | first // empty' <<<"$1"; }
+cron_field_expr() { jq -r '[.schedule.expr?, .expr?, .schedule?, .cron?] | map(select(type=="string")) | first // empty' <<<"$1"; }
+cron_field_tz() { jq -r '[.schedule.tz?, .tz?, .timezone?] | map(select(type=="string")) | first // empty' <<<"$1"; }
+
+# Jobs registered before the x-poster -> postflight rename carry the old name,
+# and cron_missing keys on the name — without this, a rerun would register a
+# second full set and every slot would draft twice. Recreates each job under
+# the new name with its schedule and Telegram route intact, then removes the
+# old one. Removal comes first on purpose: a half-failed rename that leaves no
+# job is loud and recoverable, one that leaves two double-posts for days.
+# The doctor heartbeat keeps whatever message it already had; the slot jobs
+# take the current canonical message, which also mentions the new skill name.
+cron_migrate_names() {
+  local name legacy job expr tz to jid want
+  to="$(telegram_to)"
+  for name in "${CRON_NAMES[@]}" postflight-doctor; do
+    legacy="x-poster-${name#postflight-}"
+    [[ -z "$(cron_job_json "$name")" ]] || continue
+    job="$(cron_job_json "$legacy")"
+    [[ -n "$job" ]] || continue
+    if ! interactive; then
+      todo "cron $legacy still has its pre-rename name — rerun setup.sh (no --check) to migrate"
+      continue
+    fi
+    want="$(cron_msg_for "$name")"
+    [[ -n "$want" ]] || want="$(cron_field_msg "$job")"
+    expr="$(cron_field_expr "$job")"
+    tz="$(cron_field_tz "$job")"
+    jid="$(jq -r '.id // empty' <<<"$job")"
+    if [[ -z "$expr" || -z "$tz" || -z "$to" || -z "$jid" || -z "$want" ]]; then
+      todo "cron $legacy should be renamed to $name but could not be read in full — rename it by hand (openclaw cron rm <id>, then the command in docs/SETUP-MANUAL.md)"
+      continue
+    fi
+    openclaw cron rm "$jid" >/dev/null
+    openclaw cron create "$expr" "$want" \
+      --name "$name" --session isolated --tz "$tz" \
+      --channel telegram --to "$to" >/dev/null \
+      || die "removed cron $legacy but could not create $name. Recreate it with:
+  openclaw cron create \"$expr\" \"$want\" --name $name --session isolated --tz $tz --channel telegram --to $to"
+    ok "cron $legacy renamed to $name ($expr @ $tz)"
+  done
+}
+
 # Jobs created by pre-pillar versions carry the old slot messages. Creating
 # jobs is idempotent by name, so a rerun never updates them — this detects
 # the drift and recreates the job in place, preserving its schedule and
@@ -492,7 +537,7 @@ cron_migrate_messages() {
   for name in "${CRON_NAMES[@]}"; do
     job="$(cron_job_json "$name")"
     [[ -n "$job" ]] || continue
-    cur="$(jq -r '[.payload.message?, .message?, .msg?, .prompt?] | map(select(type=="string")) | first // empty' <<<"$job")"
+    cur="$(cron_field_msg "$job")"
     [[ -n "$cur" ]] || continue
     want="$(cron_msg_for "$name")"
     [[ "$cur" == "$want" ]] && continue
@@ -500,8 +545,8 @@ cron_migrate_messages() {
       todo "cron $name still has an outdated message — rerun setup.sh (no --check) to migrate"
       continue
     fi
-    expr="$(jq -r '[.schedule.expr?, .expr?, .schedule?, .cron?] | map(select(type=="string")) | first // empty' <<<"$job")"
-    tz="$(jq -r '[.schedule.tz?, .tz?, .timezone?] | map(select(type=="string")) | first // empty' <<<"$job")"
+    expr="$(cron_field_expr "$job")"
+    tz="$(cron_field_tz "$job")"
     jid="$(jq -r '.id // empty' <<<"$job")"
     if [[ -z "$expr" || -z "$tz" || -z "$to" || -z "$jid" ]]; then
       todo "cron $name needs the new pillar-slot message but its schedule could not be read — recreate it by hand (openclaw cron rm, then the command in docs/SETUP-MANUAL.md)"
@@ -518,6 +563,7 @@ cron_migrate_messages() {
 step_cron() {
   step "Cron schedule"
   local missing
+  cron_migrate_names
   missing="$(cron_missing)"
   if [[ -z "$missing" ]]; then
     ok "all four jobs registered"

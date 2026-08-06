@@ -27,6 +27,51 @@ fi
 
 mkdir -p "$WORKSPACE/skills"
 
+# ---------- one-time: this skill was named x-poster before the rename ----------
+
+LEGACY_DEST="$WORKSPACE/skills/x-poster"
+PARKED_DEST="$WORKSPACE/x-poster-pre-rename-backup"
+
+# A dev symlink holds no state of its own — that lives in the repo, which the
+# rename already moved — and it now points at a path that no longer exists.
+if [[ -L "$LEGACY_DEST" ]]; then
+  rm "$LEGACY_DEST"
+  echo "Removed the pre-rename symlink at $LEGACY_DEST"
+fi
+
+# Carries across the two things install.sh never writes and cannot recreate:
+# state/ (post log, metrics, photo library) and *.local.md. Then moves the old
+# directory OUT of skills/, because a leftover copy still has a valid SKILL.md
+# named x-poster and OpenClaw would load two skills. Nothing is deleted.
+migrate_legacy_state() {
+  [[ -d "$LEGACY_DEST" ]] || return 0
+  if [[ -e "$PARKED_DEST" ]]; then
+    echo "error: $PARKED_DEST already exists from an earlier run." >&2
+    echo "Move or delete it, then rerun." >&2
+    exit 1
+  fi
+  mkdir -p "$SKILL_DEST"
+  if [[ -d "$LEGACY_DEST/state" ]]; then
+    if [[ -d "$SKILL_DEST/state" ]]; then
+      echo "Note: $SKILL_DEST/state already exists, so the pre-rename state was"
+      echo "      left in the parked copy below rather than overwriting it."
+    else
+      mv "$LEGACY_DEST/state" "$SKILL_DEST/state"
+      echo "Moved state/ from the pre-rename install"
+    fi
+  fi
+  local lf
+  for lf in "$LEGACY_DEST"/*.local.md; do
+    [[ -f "$lf" ]] || continue
+    [[ -e "$SKILL_DEST/$(basename "$lf")" ]] && continue
+    mv "$lf" "$SKILL_DEST/"
+    echo "Moved $(basename "$lf") from the pre-rename install"
+  done
+  mv "$LEGACY_DEST" "$PARKED_DEST"
+  echo "Parked the pre-rename skill at $PARKED_DEST"
+  echo "  (delete it once postflight has run a full draft loop)"
+}
+
 if [[ "$MODE" == "dev" ]]; then
   if [[ -e "$SKILL_DEST" && ! -L "$SKILL_DEST" ]]; then
     echo "error: $SKILL_DEST exists and is not a symlink." >&2
@@ -48,6 +93,7 @@ else
     echo "Refusing to overwrite it; move it out of the way first." >&2
     exit 1
   fi
+  migrate_legacy_state
   mkdir -p "$SKILL_DEST"
   rsync -a --delete \
     --exclude 'state/' \
