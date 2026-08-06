@@ -216,7 +216,7 @@ h1 {
 
 .install-row {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: var(--s-2);
   background: var(--surface);
   border: 1px solid var(--border);
@@ -224,16 +224,18 @@ h1 {
   padding: var(--s-2);
 }
 
+/* This is the primary CTA, so the whole command has to be readable. A single
+   scrolling line hides the half that tells you what you're piping into bash. */
 #install-cmd {
   flex: 1 1 auto;
   min-width: 0;
-  overflow-x: auto;
-  white-space: nowrap;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   background: none;
   color: var(--text);
   font-size: 13px;
+  line-height: 1.5;
   padding: var(--s-2);
-  scrollbar-width: thin;
 }
 
 .copy-btn {
@@ -336,6 +338,9 @@ p + .bubble-meta { margin-top: var(--s-3); }
 }
 
 .pillars, .how, .limits { padding-block: var(--s-7); }
+
+/* Anchor targets otherwise land flush against the 60px sticky header. */
+#how, #limits { scroll-margin-top: 76px; }
 .pillars, .limits { border-top: 1px solid var(--border); }
 .pillars { background: linear-gradient(180deg, #0c1220 0%, var(--bg) 100%); }
 
@@ -385,6 +390,11 @@ p + .bubble-meta { margin-top: var(--s-3); }
   color: var(--amber);
   padding-top: 3px;
 }
+
+/* ::before, h3 and p are three separate grid items. Without pinning the text
+   to column 2, the paragraph auto-places into row 2 of the narrow number
+   column and wraps one word per line. */
+.steps h3, .steps p { grid-column: 2; }
 
 .steps h3 { font-size: 17px; font-weight: 600; }
 .steps p { margin-top: var(--s-2); color: var(--muted); font-size: 15px; max-width: 68ch; }
