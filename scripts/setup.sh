@@ -703,6 +703,21 @@ step_voice() {
   fi
 }
 
+# Contributors edit the skill in place and commit from this checkout, so they
+# are the ones who can leak state/ or a *.local.md file. Plain installs never
+# commit anything, which is why this is --dev only.
+step_hooks() {
+  [[ $DEV_MODE -eq 1 ]] || return 0
+  step "Git hooks"
+  if bash "$REPO_DIR/scripts/install-hooks.sh" --check >/dev/null 2>&1; then
+    ok "pre-commit hook installed"
+    return 0
+  fi
+  if [[ $CHECK_ONLY -eq 1 ]]; then todo "pre-commit hook not installed"; return 0; fi
+  bash "$REPO_DIR/scripts/install-hooks.sh" >/dev/null
+  ok "pre-commit hook installed"
+}
+
 summary() {
   printf '\n\033[1m%s\033[0m\n' "Summary"
   printf '  %s\n' ${RESULTS[@]+"${RESULTS[@]}"}
@@ -718,6 +733,7 @@ step_deps
 step_node
 step_openclaw
 step_skill
+step_hooks
 step_xurl
 step_model
 step_x

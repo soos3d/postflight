@@ -1,0 +1,25 @@
+# Every file publish-clawhub.sh is allowed to upload, relative to
+# skill/postflight/. Paths only, one per line, LC_ALL=C sorted.
+#
+# publish-clawhub.sh already refuses the four shapes of personal file it knows
+# by name (state/, *.local.md, .env, settings.json). It cannot refuse a shape
+# nobody has thought of yet — a scratch note, an exported thread, a screenshot
+# dropped in the skill folder and committed by accident. This list closes that
+# gap: anything staged and not listed here fails the publish and fails CI.
+#
+# Adding a real skill file? Add its name here in the same commit. That one line
+# is the whole point: publishing a new file becomes a decision someone made,
+# not something that happened.
+#
+# This file lives in scripts/ rather than the skill folder so it never ships.
+
+CONTENT.md
+PHOTO-INGESTION.md
+PUBLISH-API.md
+PUBLISH-BROWSER.md
+REPLY-DRAFTING.md
+SKILL.md
+VOICE.md
+ingest-photo.sh
+pillars.example.md
+settings.example.json

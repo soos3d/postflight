@@ -1,0 +1,27 @@
+# gitleaks config for the CI secret scan (.github/workflows/ci.yml).
+#
+# The repo has no secrets in it and never has: real credentials live in .env
+# and skill/postflight/state/, both gitignored. This config exists to keep it
+# that way, so it runs the full default ruleset and allowlists as little as
+# possible. Every entry below is a documented placeholder, not a judgement
+# call about a real-looking string.
+
+title = "postflight"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented placeholders that are not credentials"
+
+paths = [
+  # Ships to ClawHub as the template every install copies. It carries posting
+  # caps and a timezone, no credentials — telegramTo is deliberately empty.
+  '''skill/postflight/settings\.example\.json''',
+]
+
+regexes = [
+  # docs/SETUP-MANUAL.md walks through `xurl auth apps add` with the literal
+  # strings a reader replaces.
+  '''YOUR_(CLIENT_ID|CLIENT_SECRET|BEARER_TOKEN|BOT_TOKEN)''',
+]
