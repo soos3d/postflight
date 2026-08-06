@@ -65,7 +65,11 @@ CONTENT.md "Photo library".
 **Or add photos from your phone**: send the photo to your bot with a
 one-line caption — the caption becomes the note, the agent suggests
 tags from looking at the shot, and it runs the same ingest script (same
-metadata strip, same manifest). One habit matters: **send it as a file**
+metadata strip, same manifest). One photo per message, each with its
+own note — albums get refused, because a shared caption can't say why
+each shot matters (and the note is what your captions get drafted
+from). Seeding a real backlog goes faster through the shell: copy the
+photos over and run the script once per photo. One habit matters: **send it as a file**
 (attach → File), not as a photo — Telegram recompresses photo-sends and
 strips the taken date the library needs; the bot will ask you to resend
 when that happens. Caption lines like `tags: springs kayak`,
