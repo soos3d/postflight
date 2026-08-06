@@ -91,8 +91,10 @@ Decide which mode this turn is, in order:
    `media: generated`, follow CONTENT.md "Media recipes": preferred
    recipe for the project type, then the degradation ladder. Output goes
    to `{baseDir}/state/media/` under a name you construct
-   (`<YYYYMMDD-HHmm>-<repo-slug>.<ext>`). For `media: photos:<dir>`, pick
-   an unused photo from `{baseDir}/<dir>` instead of generating one.
+   (`<YYYYMMDD-HHmm>-<repo-slug>.<ext>`). For `media: photos:<dir>`,
+   select a photo per CONTENT.md "Photo library" — manifest-listed,
+   cooldowns respected — instead of generating one; no eligible photo
+   means the cell falls back per the grid.
    Validate size caps before accepting a file. If the ladder bottoms out,
    the draft becomes `text+reply` and the pending file records why.
 6. **Write the draft.** Follow VOICE.md exactly. Write 3 candidate drafts
@@ -144,8 +146,10 @@ Decide which mode this turn is, in order:
 8. **Request approval.** Save the draft to `{baseDir}/state/pending/<YYYYMMDD-HHmm>.md`
    with these fields: `pillar:`, `format:` (`media+reply`, `text+reply`, or
    `text`), `repo:` and `angle:` (builds/build-in-public only), `media:`
-   (the file path, or `none (<reason>)` — e.g. which tools were missing),
-   the body text, the reply text (when the format has one), source links,
+   (the file path, or `none (<reason>)` — e.g. which tools were missing;
+   for a photo-library pick, also the manifest's `location:` and
+   `taken:`), the body text, the reply text (when the format has one),
+   source links,
    `body_counted_chars: <n>` and `reply_counted_chars: <n>` — each `<n>`
    the number printed by the command above, never one you produced
    yourself. Then:
@@ -231,8 +235,9 @@ that word. `ship it`, `just shipped v2`, or anything longer is NOT a command.
 - Never write credentials or tokens into any state file.
 - Never edit the instruction files in this folder (SKILL.md, VOICE.md,
   CONTENT.md, PUBLISH-*.md, settings.example.json, pillars.example.md) —
-  and never edit `pillars.local.md` either: it is the user's
-  configuration, not state. Writing under `state/` is your job; the
+  and never edit `pillars.local.md` or a photo library's `manifest.yaml`
+  either: those are the user's configuration and data, not state.
+  Photos enter the library only through the user's ingest script. Writing under `state/` is your job; the
   rules are not. If a rule seems wrong or caused a bad
   draft, tell the user exactly what to change and why — fixes arrive
   through git, and an edit made here is silently overwritten by the next

@@ -175,6 +175,49 @@ contains no URL and the link still ships as the reply
 pending file must say media generation failed and which tools were
 missing, so the user knows what to install.
 
+## Photo library
+
+A `media: photos:<dir>` pillar draws from a photo directory the user
+curates, described by a manifest at `{baseDir}/<dir>/manifest.yaml`. The
+manifest is the library: **a photo without a manifest entry is not
+postable**, even if the file sits in the directory. One entry per photo:
+
+```yaml
+- file: 2026-06-14-ichetucknee-run.jpg   # relative to <dir>
+  tags: [springs, kayak, summer]
+  location: "Ichetucknee Springs State Park"
+  note: "72F water year-round, tannic river meets clear spring run"
+  taken: 2026-06-14
+```
+
+Photos enter the library through `scripts/ingest-photo.sh` in the repo
+checkout, which strips EXIF (GPS included) and writes the entry. The
+manifest is the user's data, exactly like `pillars.local.md`: read it,
+never write it. Usage is not tracked in the manifest at all — it derives
+from the post log, where a shipped photo post records the photo path in
+its `media` field.
+
+**Selection**, when a photo pillar's slot fires — a photo is eligible if
+all of these hold:
+
+- it has a manifest entry and the file exists, within the 5 MB image cap;
+- its `taken` date is before today in `timezone` — never post a photo
+  the day it was taken (the pillar's own rules may push this further);
+- its path appears in no post-log `media` field in the last 60 days;
+- when the pillar's section names tags, at least one matches.
+
+From the eligible set, prefer never-posted photos, then the one whose
+last post-log appearance is oldest; break remaining ties by oldest
+`taken`. No eligible photo → the cell falls back per the grid, like any
+pillar without material.
+
+**Caption**: the entry's `note` is the seed — the user's memory of why
+the shot matters — and you can look at the image itself. Draft in the
+pillar's register per VOICE.md; `location` may inform the wording but a
+personal-register post never reads like a check-in. The pending file and
+the approval message carry `location` and `taken` alongside the photo,
+so approving is an informed decision.
+
 ## insights
 
 Opinions, lessons, and hot takes from your own work: what a tool got

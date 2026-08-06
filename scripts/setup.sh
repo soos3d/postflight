@@ -360,6 +360,11 @@ step_media_tools() {
   done
   [[ $any -eq 1 ]] \
     || todo "neither vhs nor freeze installed — builds posts ship text-only until one exists (see CONTENT.md Media recipes)"
+  if command -v exiftool >/dev/null; then
+    ok "exiftool present (photo-library ingestion)"
+  else
+    todo "exiftool not installed — only needed for photo pillars; scripts/ingest-photo.sh requires it to strip EXIF/GPS"
+  fi
 }
 
 # ---------- step 6: telegram ----------

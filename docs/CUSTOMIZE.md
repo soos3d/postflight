@@ -36,9 +36,36 @@ inline. Two things people trip on:
 - Renaming a pillar resets its rotation history (past posts are keyed by
   pillar name in the post log).
 
-A pillar with `media: photos:<dir>` draws from a photo directory you
-curate (e.g. `state/media/photos/`) — its grid cells simply fall back to
-another pillar until that directory has photos in it.
+A pillar with `media: photos:<dir>` draws from a photo library you
+curate — see the next section. Its grid cells simply fall back to
+another pillar until the library has photos in it.
+
+## 1b. Photo libraries — for `media: photos:<dir>` pillars
+
+A photo library is a directory (typically `state/media/photos/`) plus a
+`manifest.yaml` describing each photo: tags, an optional location, a
+one-line `note` — your memory of why the shot matters, which becomes the
+caption seed — and the taken date. Only photos with a manifest entry are
+postable, so nothing lands in your feed that you didn't deliberately add.
+
+Add photos with the ingest script (requires `exiftool`):
+
+```sh
+./scripts/ingest-photo.sh --location "Ichetucknee Springs State Park" \
+  ~/Pictures/IMG_4132.jpg "water was glass, 72F year-round" springs kayak
+```
+
+It strips all metadata — GPS coordinates included — from the library
+copy, files it under a clean date-based name, and appends the manifest
+entry. The taken date comes from EXIF (pass `--taken YYYY-MM-DD` if the
+photo has none) and enforces the never-same-day rule; a photo also rests
+60 days after being posted. Selection and caption rules live in
+CONTENT.md "Photo library".
+
+Two rules the script can't enforce: keep home-adjacent spots out of the
+library entirely, and post after leaving a location, never from it. The
+library lives under `state/`, so it is never committed; back it up with
+`scripts/migrate-state.sh` like the rest of the state.
 
 ## 2. Your voice — `voice-examples.local.md`
 
