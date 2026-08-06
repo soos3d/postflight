@@ -216,4 +216,46 @@ under the pipeline's own repo.
 pillar in the active set, each line `- [ ] <angle>`. When you use one,
 mark it `- [x]` with the date. A weekly cron run regenerates it: sweep
 repos with the commands above, add fresh angles for every active pillar,
-never delete unchecked ones.
+never delete unchecked ones. The backlog also carries a `## what worked`
+section written by the metrics readback below — keep it when
+regenerating, trimming entries older than 4 weeks.
+
+## Metrics readback
+
+Runs in the weekly maintenance turn, after the backlog refresh. API reads
+are pay-per-use like posts: one batched request per week, and skip the
+fetch entirely when there is nothing new to measure.
+
+1. **Collect candidates.** Post-log entries 7–14 days old (in `timezone`)
+   that have a `url` and no line in `{baseDir}/state/metrics.jsonl` yet.
+   A post's id is the trailing number of its `url`. Ignore `reply_url`s —
+   the body carries the signal. No candidates → no fetch; still send the
+   digest if `metrics.jsonl` has prior weeks to report.
+2. **Fetch.** One batched tweets request plus one account request, exact
+   forms in PUBLISH-API.md "Reads". Ask for `public_metrics` and
+   `non_public_metrics`; if the response is an error naming
+   `non_public_metrics`, retry once with `public_metrics` alone and note
+   in the digest that profile clicks were unavailable.
+3. **Record.** Append to `state/metrics.jsonl`, one line per post:
+   `{"post_id": "...", "fetched_at": "<ISO>", "age_days": 7,
+   "pillar": "...", "format": "...", "impressions": n, "likes": n,
+   "replies": n, "reposts": n, "quotes": n, "bookmarks": n,
+   "profile_clicks": n, "link_clicks": n}` — `pillar`/`format` copied
+   from the post-log line, fields the API did not return omitted. Then
+   one account line per readback:
+   `{"type": "account", "fetched_at": "<ISO>", "followers": n}`.
+   Never rewrite existing lines; a post is fetched once, at 7d.
+4. **Backlog note.** Under `## what worked` in `state/backlog.md`, add a
+   dated entry: best and worst post of the batch (impressions, with the
+   post-log `topic`), and one sentence on any pattern worth acting on
+   ("media builds posts beat text-only 3×" — only if the numbers actually
+   show it). Trim entries older than 4 weeks.
+5. **Digest.** Send to `telegramTo` (in draft mode: include it in the
+   turn report instead): posts measured, best/worst with topic and
+   impressions, median impressions by pillar and by format across all of
+   `metrics.jsonl`, and follower count with the delta since the previous
+   account line. Numbers only from fetched data — a pillar with fewer
+   than 3 measured posts gets its count shown, not a median.
+
+Pillar weights stay a human decision: the digest informs, the user edits
+the grid. Never adjust weights, the grid, or any config from metrics.

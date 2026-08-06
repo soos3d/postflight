@@ -450,7 +450,7 @@ cron_msg_for() {
     x-poster-own-work) printf 'Run the x-poster skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
     x-poster-ai-news)  printf 'Run the x-poster skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
     x-poster-aviation) printf 'Run the x-poster skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
-    x-poster-backlog)  printf 'x-poster maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections. Do not draft or publish.' ;;
+    x-poster-backlog)  printf 'x-poster maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections, then run the weekly metrics readback per CONTENT.md "Metrics readback". Do not draft or publish.' ;;
   esac
 }
 
