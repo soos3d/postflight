@@ -70,6 +70,9 @@ metadata strip, same manifest). One habit matters: **send it as a file**
 strips the taken date the library needs; the bot will ask you to resend
 when that happens. Caption lines like `tags: springs kayak`,
 `location: ...`, or `taken: 2026-06-14` override what's detected.
+iPhone tip: file-sends of HEIC photos get refused with a conversion
+hint — Settings → Camera → Formats → "Most Compatible" makes the camera
+shoot JPEG and the whole flow friction-free.
 
 Two rules the script can't enforce: keep home-adjacent spots out of the
 library entirely, and post after leaving a location, never from it. The

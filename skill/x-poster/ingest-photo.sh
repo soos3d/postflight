@@ -7,10 +7,17 @@
 # manifest — this script and your editor are the only ways in.
 #
 # usage: ingest-photo.sh [options] <photo> "<one-line note>" <tag> [tag ...]
-#   --dir DIR           library directory (default: the installed skill's
-#                       state/media/photos, else this checkout's)
-#   --location "..."    where it was taken (shown in the approval message)
-#   --taken YYYY-MM-DD  taken date, when the photo has no EXIF date
+#        ingest-photo.sh [options] --note-file F <photo> <tag> [tag ...]
+#   --dir DIR            library directory (default: the installed skill's
+#                        state/media/photos, else this skill folder's);
+#                        must not contain ".."
+#   --location "..."     where it was taken (shown in the approval message)
+#   --location-file F    read the location from a file instead (safe for
+#                        untrusted text: nothing is shell-expanded)
+#   --note-file F        read the note from a file instead of an argument
+#   --taken YYYY-MM-DD   taken date, when the photo has no EXIF date
+#   --name SLUG          filename slug (default: from the source filename)
+#   --ext jpg|jpeg|png   extension, when the source file has none
 #
 # Works on macOS bash 3.2 and Linux bash 5. Requires exiftool.
 
@@ -20,16 +27,16 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 ok()  { printf '  ok: %s\n' "$*"; }
 
 # The library must live where the agent reads it: the installed copy if
-# this machine has one, else this checkout (covers --dev symlink installs,
-# where both paths are the same tree).
+# this machine has one, else the skill folder this script sits in (covers
+# --dev symlink installs, where both paths are the same tree).
 default_dir() {
-  local installed="$HOME/.openclaw/workspace/skills/x-poster"
-  local checkout
-  checkout="$(cd "$(dirname "$0")/.." && pwd)/skill/x-poster"
+  local installed="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}/skills/x-poster"
+  local here
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   if [[ -d "$installed" ]]; then
     printf '%s' "$installed/state/media/photos"
   else
-    printf '%s' "$checkout/state/media/photos"
+    printf '%s' "$here/state/media/photos"
   fi
 }
 
@@ -44,19 +51,38 @@ slugify() {
     | sed 's/[^a-z0-9]\{1,\}/-/g; s/^-//; s/-$//'
 }
 
-dir="" location="" taken=""
+dir="" location="" taken="" note_file="" location_file="" name="" ext_opt=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dir)      dir="${2:?--dir needs a value}"; shift 2 ;;
-    --location) location="${2:?--location needs a value}"; shift 2 ;;
-    --taken)    taken="${2:?--taken needs a value}"; shift 2 ;;
-    --*)        die "unknown option: $1" ;;
-    *)          break ;;
+    --dir)           dir="${2:?--dir needs a value}"; shift 2 ;;
+    --location)      location="${2:?--location needs a value}"; shift 2 ;;
+    --location-file) location_file="${2:?--location-file needs a value}"; shift 2 ;;
+    --note-file)     note_file="${2:?--note-file needs a value}"; shift 2 ;;
+    --taken)         taken="${2:?--taken needs a value}"; shift 2 ;;
+    --name)          name="${2:?--name needs a value}"; shift 2 ;;
+    --ext)           ext_opt="${2:?--ext needs a value}"; shift 2 ;;
+    --*)             die "unknown option: $1" ;;
+    *)               break ;;
   esac
 done
-[[ $# -ge 3 ]] || die 'usage: ingest-photo.sh [options] <photo> "<note>" <tag> [tag ...]'
-photo="$1" note="$2"
-shift 2
+case "$dir" in *..*) die "--dir must not contain '..'" ;; esac
+[[ -z "$name" || "$name" =~ ^[a-z0-9][a-z0-9-]*$ ]] || die "--name must be a lowercase slug"
+if [[ -n "$note_file" ]]; then
+  [[ -f "$note_file" ]] || die "no such note file: $note_file"
+  note="$(cat "$note_file")"
+  [[ $# -ge 2 ]] || die 'usage: ingest-photo.sh [options] --note-file F <photo> <tag> [tag ...]'
+  photo="$1"
+  shift 1
+else
+  [[ $# -ge 3 ]] || die 'usage: ingest-photo.sh [options] <photo> "<note>" <tag> [tag ...]'
+  photo="$1" note="$2"
+  shift 2
+fi
+if [[ -n "$location_file" ]]; then
+  [[ -z "$location" ]] || die "pass --location or --location-file, not both"
+  [[ -f "$location_file" ]] || die "no such location file: $location_file"
+  location="$(cat "$location_file")"
+fi
 case "$photo" in -*) photo="./$photo" ;; esac
 
 command -v exiftool >/dev/null \
@@ -64,7 +90,12 @@ command -v exiftool >/dev/null \
 [[ -f "$photo" ]] || die "no such file: $photo"
 [[ -n "${note// /}" ]] || die "the note is the caption seed — it cannot be empty"
 
-ext="$(printf '%s' "${photo##*.}" | tr '[:upper:]' '[:lower:]')"
+if [[ "$(basename "$photo")" == *.* ]]; then
+  ext="$(printf '%s' "${photo##*.}" | tr '[:upper:]' '[:lower:]')"
+else
+  ext="$(printf '%s' "$ext_opt" | tr '[:upper:]' '[:lower:]')"
+  [[ -n "$ext" ]] || die "source file has no extension — pass --ext jpg|jpeg|png"
+fi
 case "$ext" in
   jpg|jpeg|png) ;;
   heic) die "X does not take HEIC — convert it first (macOS: sips -s format jpeg <file> --out out.jpg)" ;;
@@ -93,7 +124,11 @@ fi
 mkdir -p "$dir"
 
 base="$(basename "$photo")"
-slug="$(slugify "${base%.*}")"
+if [[ -n "$name" ]]; then
+  slug="$name"
+else
+  slug="$(slugify "${base%.*}")"
+fi
 [[ -n "$slug" ]] || slug="photo"
 dest="$taken-$slug.$ext"
 if [[ -e "$dir/$dest" ]]; then
@@ -129,7 +164,7 @@ done
 manifest="$dir/manifest.yaml"
 if [[ ! -f "$manifest" ]]; then
   printf '# x-poster photo library — one entry per postable photo.\n' > "$manifest"
-  printf '# Maintained by scripts/ingest-photo.sh and your editor; the skill only reads it.\n' >> "$manifest"
+  printf '# Maintained by ingest-photo.sh and your editor; the skill only reads it.\n' >> "$manifest"
 fi
 {
   printf -- '- file: %s\n' "$dest"
