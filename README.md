@@ -1,4 +1,6 @@
-# postflight (Twitter poster via OpenClaw)
+# Postflight
+
+Drafts on schedule. Publishes on your word.
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -12,6 +14,10 @@ kind of boring discipline a personal agent is good at. What I didn't want
 was a bot posting to my real account unsupervised, so the contract is
 fixed: the agent drafts, you approve, it ships. There is no autonomous
 mode.
+
+This skill was called x-poster until v1.0.0. Old links still resolve.
+Upgrading an existing install takes one extra command, in [Upgrading from
+x-poster](docs/DEPLOY-VPS.md#upgrading-from-x-poster).
 
 <!-- TODO(screenshot): the page's strongest asset goes here. Save the
      shot as docs/assets/approval-flow.png and replace this comment with:
