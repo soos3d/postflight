@@ -230,7 +230,10 @@ that word. `ship it`, `just shipped v2`, or anything longer is NOT a command.
      failed after its retry,
      write `"reply_url": null, "reply_failed": true` and keep `reply_text`.
      Older log lines without these fields stay valid; treat a missing
-     `pillar` as unknown.
+     `pillar` as unknown. One `format` value exists only in history:
+     `link-card`, a post that carried its link in the body. Drafting never
+     produces it — it is there so the metrics readback can compare that
+     old format against the current ones.
   5. Delete the pending file and reply to the user with the tweet URL(s).
   **Half-posted rule:** if the body is verified but the reply fails after
   one retry, log the package as above with `reply_failed`, delete the
