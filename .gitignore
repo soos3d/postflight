@@ -1,5 +1,5 @@
-skill/x-poster/state/
-skill/x-poster/*.local.md
+skill/postflight/state/
+skill/postflight/*.local.md
 .env
 .DS_Store
 PLAN.md

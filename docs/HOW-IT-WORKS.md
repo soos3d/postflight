@@ -12,8 +12,8 @@ Model auth reuses your Claude or ChatGPT/Codex subscription, so there's no
 separate API bill. The setup wizard asks which you have. The voice rules
 were tuned on Claude.
 
-x-poster is one skill. The platform supplies the moving parts, and five
-markdown files in `skill/x-poster/` tell the agent what to do:
+Postflight is one skill. The platform supplies the moving parts, and five
+markdown files in `skill/postflight/` tell the agent what to do:
 
 | File | Job |
 |---|---|

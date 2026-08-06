@@ -1,6 +1,6 @@
 # Roadmap
 
-What's planned for x-poster, in priority order. Items move up or down based
+What's planned for Postflight, in priority order. Items move up or down based
 on real use, not votes — but if one of these matters to you, say so in an
 issue, and see [CONTRIBUTING.md](CONTRIBUTING.md) if you want to build it.
 The one rule that never moves: every post is approved by a human before it

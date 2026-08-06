@@ -22,7 +22,7 @@ auth_store_path() {
 }
 
 resolved_skill_dir() {
-  local dest="$WORKSPACE/skills/x-poster"
+  local dest="$WORKSPACE/skills/postflight"
   if [[ -L "$dest" ]]; then readlink "$dest"; else printf '%s' "$dest"; fi
 }
 
@@ -36,7 +36,7 @@ copy_sqlite() { # src, destdir — includes -wal/-shm journal siblings
 }
 
 do_export() {
-  local out="${1:-$HOME/x-poster-state-$(date +%Y%m%d-%H%M).tar.gz}"
+  local out="${1:-$HOME/postflight-state-$(date +%Y%m%d-%H%M).tar.gz}"
   [[ -e "$out" ]] && die "$out already exists"
   command -v openclaw >/dev/null || die "openclaw not on PATH (need it to locate the auth store)"
 
@@ -114,7 +114,7 @@ do_import() {
     [[ -f "$staging/model-auth/$sibling" ]] && cp "$staging/model-auth/$sibling" "$(dirname "$store")/"
   done
 
-  local skill="$WORKSPACE/skills/x-poster"
+  local skill="$WORKSPACE/skills/postflight"
   [[ -d "$skill" ]] || die "skill not installed at $skill — run scripts/setup.sh first, then re-import"
   place_dir "$staging/skill-state" "$skill/state"
   local lf

@@ -1,4 +1,4 @@
-# x-poster (Twitter poster via OpenClaw)
+# postflight (Twitter poster via OpenClaw)
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -41,7 +41,7 @@ mode.
 ### 2. Run the wizard
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Soos3D/x-poster/main/scripts/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/soos3d/postflight/main/scripts/setup.sh | bash
 ```
 
 Prefer not to pipe curl into bash? Clone the repo and run
@@ -57,7 +57,7 @@ a failure is safe.
 Message your bot:
 
 ```
-x-poster: draft a post
+postflight: draft a post
 ```
 
 Reply `skip`. You'll see the whole loop run without posting anything.
@@ -91,7 +91,7 @@ conflicts with your customization. Full walkthrough in
 | 3 to 5 of your own tweets | `voice-examples.local.md` | They outrank every other style rule. Don't skip this one |
 | Accounts whose register to study | `styleAccounts` in `state/settings.json` | Patterns only, never named in posts |
 
-These live in `~/.openclaw/workspace/skills/x-poster/`, where the default
+These live in `~/.openclaw/workspace/skills/postflight/`, where the default
 install copies the skill. `install.sh` never touches `state/` or
 `*.local.md`.
 

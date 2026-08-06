@@ -60,8 +60,8 @@ openclaw onboard        # accept defaults; creates ~/.openclaw + workspace
 ## 3. Clone and install the skill
 
 ```sh
-git clone https://github.com/Soos3D/x-poster.git ~/x-poster
-cd ~/x-poster
+git clone https://github.com/soos3d/postflight.git ~/postflight
+cd ~/postflight
 ./scripts/setup.sh --check   # see what the box is missing
 ./scripts/setup.sh           # installs skill + xurl
 ```
@@ -84,17 +84,17 @@ mid-write:
 ```sh
 openclaw gateway stop
 ./scripts/migrate-state.sh export
-scp ~/x-poster-state-*.tar.gz poster@SERVER:
+scp ~/postflight-state-*.tar.gz poster@SERVER:
 ```
 
 On the **server**:
 
 ```sh
-cd ~/x-poster
-./scripts/migrate-state.sh import ~/x-poster-state-*.tar.gz
+cd ~/postflight
+./scripts/migrate-state.sh import ~/postflight-state-*.tar.gz
 xurl /2/users/me            # must print your handle
 openclaw models status      # must show your provider profile
-rm ~/x-poster-state-*.tar.gz
+rm ~/postflight-state-*.tar.gz
 ```
 
 Delete the tarball on the laptop too — it contains live credentials.
@@ -137,7 +137,7 @@ openclaw gateway status && openclaw doctor
 
 With the laptop gateway still **stopped**:
 
-1. Message the bot `x-poster: draft a post`. The draft must come from the
+1. Message the bot `postflight: draft a post`. The draft must come from the
    server. Reply `skip` and check `state/skipped/` on the server.
 2. Run one full `ship` round trip. Confirm the permalink and the post-log
    entry on the server.
@@ -145,7 +145,7 @@ With the laptop gateway still **stopped**:
 Only after both pass, retire the laptop copy. On the **laptop**:
 
 ```sh
-openclaw cron list                       # note the four x-poster job ids
+openclaw cron list                       # note the four postflight job ids
 openclaw cron rm <id>                    # all four
 openclaw gateway uninstall               # LaunchAgent gone for good
 ```
@@ -165,7 +165,7 @@ is down:
 ```sh
 openclaw cron create "0 9 * * 1" \
   "Run 'openclaw doctor' via shell and send me a one-line health summary, mentioning xurl and model auth status." \
-  --name x-poster-doctor --session isolated --tz America/New_York \
+  --name postflight-doctor --session isolated --tz America/New_York \
   --channel telegram --to YOUR_TELEGRAM_USER_ID
 ```
 
@@ -176,14 +176,14 @@ The laptop is the dev machine. The server only consumes git:
 ```sh
 # laptop: edit, commit, push
 # server:
-cd ~/x-poster && git pull && ./scripts/install.sh   # state/ and *.local.md are never touched
+cd ~/postflight && git pull && ./scripts/install.sh   # state/ and *.local.md are never touched
 ```
 
 Personal config (`pillars.local.md`, `voice-examples.local.md`) is
 untracked, so it doesn't travel through git. It reaches a new box two ways:
 
 - `migrate-state.sh`, which carries every `*.local.md`
-- a plain `scp` into `~/.openclaw/workspace/skills/x-poster/`
+- a plain `scp` into `~/.openclaw/workspace/skills/postflight/`
 
 A photo library works the same way. It lives under `state/media/photos/`,
 which `migrate-state.sh` carries with the rest of the state. It's the one

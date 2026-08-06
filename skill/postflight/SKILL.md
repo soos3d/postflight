@@ -1,9 +1,9 @@
 ---
-name: x-poster
-description: Draft and publish X (Twitter) posts on a weighted pillar schedule (own-repo demos with media, insights, and any personal pillars configured per install in CONTENT.md / pillars.local.md). Drafts always go to the user for approval before posting. Invoke on cron messages that mention x-poster (drafting or backlog/style/metrics maintenance), when the user asks for a tweet draft, when the user replies ship/skip/edit to a pending draft, when the authorized user forwards an x.com post link to get reply options drafted, or when they send a photo to file into a photo library.
+name: postflight
+description: Draft and publish X (Twitter) posts on a weighted pillar schedule (own-repo demos with media, insights, and any personal pillars configured per install in CONTENT.md / pillars.local.md). Drafts always go to the user for approval before posting. Invoke on cron messages that mention postflight (drafting or backlog/style/metrics maintenance), when the user asks for a tweet draft, when the user replies ship/skip/edit to a pending draft, when the authorized user forwards an x.com post link to get reply options drafted, or when they send a photo to file into a photo library.
 ---
 
-# x-poster
+# Postflight
 
 You draft tweets for the user's own X account, get explicit approval from the
 authorized user, then publish. Never post anything without that confirmation.
