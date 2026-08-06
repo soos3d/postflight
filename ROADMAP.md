@@ -3,6 +3,8 @@
 What's planned for Postflight, in priority order. Items move up or down based
 on real use, not votes — but if one of these matters to you, say so in an
 issue, and see [CONTRIBUTING.md](CONTRIBUTING.md) if you want to build it.
+The items open for contribution are tagged
+[good first issue](https://github.com/soos3d/postflight/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 The one rule that never moves: every post is approved by a human before it
 ships. Nothing on this list adds an autonomous mode.
 
@@ -105,7 +107,7 @@ promise there is about sending, and this feature sends nothing.
 
 ## Next
 
-### 8. Per-slot model overrides
+### 8. Per-slot model overrides — [#18](https://github.com/soos3d/postflight/issues/18)
 
 OpenClaw's `openclaw cron edit <id> --model <ref>` lets each cron slot run a
 different model: cheap model for the Monday backlog refresh, strong model
@@ -123,7 +125,7 @@ generalize that package to N tweets.
 
 ## Later
 
-### 10. Second network: Bluesky
+### 10. Second network: Bluesky — [#16](https://github.com/soos3d/postflight/issues/16)
 
 A new `PUBLISH-BLUESKY.md` following the same shape as the existing publish
 docs. Bluesky's token API needs no OAuth dance, which makes it the easiest
