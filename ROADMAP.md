@@ -69,8 +69,11 @@ falls back to `public_metrics` and says so in the digest.
 by a manifest: only photos deliberately added are postable, selection
 enforces a 60-day reuse cooldown and a never-same-day rule, and usage
 derives from the post log so the agent never writes the manifest.
-`scripts/ingest-photo.sh` is the way in — it strips all metadata (GPS
-included) from the library copy before anything can ship.
+The ingest script is the way in — it strips all metadata (GPS included)
+from the library copy before anything can ship. Same-day follow-up:
+photos can now be sent straight to the bot (as a file, with a caption
+as the note) — the agent suggests tags and runs that same script, so
+the script remains the only manifest writer.
 
 ### 6. Reply drafting assist — SHIPPED 2026-08-05
 

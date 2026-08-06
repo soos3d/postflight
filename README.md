@@ -68,10 +68,13 @@ Two things happen outside the daily loop. A weekly maintenance turn
 refreshes the content backlog and reads last week's posts' metrics into
 a Telegram digest (median impressions by pillar and format, follower
 delta), so adjusting the schedule is an informed edit rather than a
-guess. And you can forward someone's post link to the bot to get two or
+guess. You can forward someone's post link to the bot to get two or
 three reply options drafted in your voice — each has to carry code, a
 gotcha, or a real number, and sending them stays manual, from your own
-client.
+client. And a photo pillar's library grows from your phone: send the
+bot a photo as a file with a one-line caption, and it lands in the
+library with its location metadata stripped, tagged, ready to post
+after its cooldowns.
 
 ## Quickstart
 
