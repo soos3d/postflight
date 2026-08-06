@@ -81,9 +81,11 @@ Rules around the grid (these apply to any grid, default or overlay):
 - **Slot source.** The cron message says which slot this is; trust it.
   Never derive the slot from today's post count — a skipped morning draft
   would shift every later slot. For a manual "draft a post" request with no
-  slot, pick the pillar furthest behind its weekly target (count post-log
-  lines since Monday in `timezone` by their `pillar` field; ties go to
-  builds).
+  slot, pick the pillar furthest behind its weekly target — count lines
+  since Monday in `timezone` by their `pillar` field, over a bounded
+  slice: `tail -n 30 {baseDir}/state/post-log.jsonl | jq -r '[.date,
+  .pillar] | @tsv'`. Thirty lines is a full week and change at the
+  default cap. Ties go to builds.
 - **Queue smoothing.** Never two `link: reply` posts in adjacent slots of
   a day, and never two same-pillar posts in adjacent slots. A well-formed
   grid already satisfies both — if you deviate from the grid for any
@@ -131,7 +133,14 @@ four angles, in order:
    short "how to do X" extracted from the code
 
 To find where a repo is in the cycle, read the most recent post-log line
-whose `repo` field matches and post the next angle after its `angle` field.
+whose `repo` field matches and post the next angle after its `angle`
+field. Filter in the shell rather than reading the log:
+
+```sh
+jq -r --arg r "OWNER/NAME" 'select(.repo == $r) | [.date, .angle] | @tsv' \
+  {baseDir}/state/post-log.jsonl | tail -n 1
+```
+
 Lines without an `angle` field (pre-pillar log entries) mean: start at
 `problem`. Two posts about the same repo must be at least 4 days apart —
 same-repo posts on consecutive days split their own audience.
@@ -218,7 +227,10 @@ all of these hold:
   the day it was taken (the pillar's own rules may push this further);
 - its `file:` name appears in no post-log `media` field in the last 60
   days — match on the filename (the path's last segment), since the log
-  stores the `{baseDir}`-relative path;
+  stores the `{baseDir}`-relative path. Sixty days is at most 180 lines
+  at the default cap, so read
+  `tail -n 200 {baseDir}/state/post-log.jsonl | jq -r 'select(.media) |
+  [.date, .media] | @tsv'` rather than the whole log;
 - when the pillar's section names tags, at least one matches.
 
 From the eligible set, prefer never-posted photos, then the one whose
