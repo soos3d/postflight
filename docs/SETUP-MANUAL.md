@@ -182,7 +182,8 @@ Then set `telegramTo`, message your bot "x-poster: draft a post", and reply
 `skip` — the draft should land in `state/skipped/` and nowhere else. Only
 after a full draft → `ship` → verified permalink round trip should you
 register the cron jobs; the installer prints the exact commands (three
-drafting turns a day plus a weekly backlog refresh, isolated sessions).
+drafting turns a day plus a weekly maintenance turn — backlog refresh
+and metrics readback — in isolated sessions).
 The drafting messages are slot-numbered and pillar-agnostic — which pillar
 a slot gets comes from the weekly grid in CONTENT.md, so rescheduling
 never means editing cron messages. If you installed before the pillar

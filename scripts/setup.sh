@@ -360,6 +360,12 @@ step_media_tools() {
   done
   [[ $any -eq 1 ]] \
     || todo "neither vhs nor freeze installed — builds posts ship text-only until one exists (see CONTENT.md Media recipes)"
+  if command -v exiftool >/dev/null; then
+    ok "exiftool present (photo-library ingestion)"
+  else
+    # Informational, not a todo: most installs have no photo pillar.
+    echo "  note: exiftool not installed — only needed if you add a photo pillar (scripts/ingest-photo.sh uses it to strip EXIF/GPS)"
+  fi
 }
 
 # ---------- step 6: telegram ----------
@@ -450,7 +456,7 @@ cron_msg_for() {
     x-poster-own-work) printf 'Run the x-poster skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
     x-poster-ai-news)  printf 'Run the x-poster skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
     x-poster-aviation) printf 'Run the x-poster skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
-    x-poster-backlog)  printf 'x-poster maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections. Do not draft or publish.' ;;
+    x-poster-backlog)  printf 'x-poster maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections, then run the weekly metrics readback per CONTENT.md "Metrics readback". Do not draft or publish.' ;;
   esac
 }
 
@@ -491,7 +497,7 @@ cron_migrate_messages() {
     want="$(cron_msg_for "$name")"
     [[ "$cur" == "$want" ]] && continue
     if ! interactive; then
-      todo "cron $name still has the pre-pillar message — rerun setup.sh (no --check) to migrate"
+      todo "cron $name still has an outdated message — rerun setup.sh (no --check) to migrate"
       continue
     fi
     expr="$(jq -r '[.schedule.expr?, .expr?, .schedule?, .cron?] | map(select(type=="string")) | first // empty' <<<"$job")"
@@ -505,7 +511,7 @@ cron_migrate_messages() {
     openclaw cron create "$expr" "$want" \
       --name "$name" --session isolated --tz "$tz" \
       --channel telegram --to "$to" >/dev/null
-    ok "cron $name migrated to the pillar-slot message ($expr @ $tz)"
+    ok "cron $name migrated to the current message ($expr @ $tz)"
   done
 }
 

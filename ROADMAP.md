@@ -52,16 +52,38 @@ $0.20 per post containing a URL, but observed billing on this account is
 price — check the usage meter after the first real upload. The
 link-in-reply format bills a repo post as two posts.
 
+### 4. Engagement readback — SHIPPED 2026-08-05
+
+The Monday maintenance turn now pulls metrics for posts 7–14 days old in
+one batched read, logs them to `state/metrics.jsonl`, appends a dated
+"what worked" note to the backlog, and sends a Telegram digest: best and
+worst post, median impressions by pillar and by format, follower delta.
+Pillar weights stay a human edit to the grid — the digest informs, it
+never steers. Cost caveat: API reads bill pay-per-use like posts, and
+`non_public_metrics` (profile clicks) may be tier-gated — the readback
+falls back to `public_metrics` and says so in the digest.
+
+### 5. Photo library pillars — SHIPPED 2026-08-05
+
+`media: photos:<dir>` pillars now draw from a curated library described
+by a manifest: only photos deliberately added are postable, selection
+enforces a 60-day reuse cooldown and a never-same-day rule, and usage
+derives from the post log so the agent never writes the manifest.
+`scripts/ingest-photo.sh` is the way in — it strips all metadata (GPS
+included) from the library copy before anything can ship.
+
+### 6. Reply drafting assist — SHIPPED 2026-08-05
+
+Forward someone's post link to the bot and it returns 2–3 reply options
+in your voice — each must carry code, a gotcha, or a number from your
+own work, or it tells you it has nothing worth adding. Sending stays
+entirely manual, from your own client: the skill reads that one post
+and publishes nothing. See the amended note under "Not planned" — the
+promise there is about sending, and this feature sends nothing.
+
 ## Next
 
-### 4. Engagement readback
-
-The Monday maintenance turn reads `public_metrics` for the last posts and
-appends a short "what worked" note to the backlog, so angle selection learns
-from results. A stats digest to Telegram falls out of the same fetch almost
-for free.
-
-### 5. Per-slot model overrides
+### 7. Per-slot model overrides
 
 OpenClaw's `openclaw cron edit <id> --model <ref>` lets each cron slot run a
 different model: cheap model for the Monday backlog refresh, strong model
@@ -69,7 +91,7 @@ for drafting. Mostly a documentation task now that provider choice
 (item 1) has shipped. Needs a live check first — openclaw#28905 reports cron overrides
 being ignored in some versions.
 
-### 6. Thread support
+### 8. Thread support
 
 Multi-tweet drafts approved as one unit, published as a reply chain
 (`reply.in_reply_to_tweet_id`). The building blocks shipped with media
@@ -79,7 +101,7 @@ generalize that package to N tweets.
 
 ## Later
 
-### 7. Second network: Bluesky
+### 9. Second network: Bluesky
 
 A new `PUBLISH-BLUESKY.md` following the same shape as the existing publish
 docs. Bluesky's token API needs no OAuth dance, which makes it the easiest
@@ -87,14 +109,14 @@ second network. Mastodon would follow the same pattern.
 [CONTRIBUTING.md](CONTRIBUTING.md) already invites publish docs for other
 networks — this is a good first contribution.
 
-### 8. Skip/edit feedback loop
+### 10. Skip/edit feedback loop
 
 When the owner skips a draft or asks for an edit, log the reason to a state
 file that future drafting turns read. The agent is forbidden from editing
 its own instruction files, so learning accumulates in `state/`, and proven
 lessons get promoted into `VOICE.md` by a human through git.
 
-### 9. Style refresh for headless installs
+### 11. Style refresh for headless installs
 
 `styleAccounts` study currently needs a browser session, which a VPS install
 doesn't have. Parked until there's a clean headless path.
@@ -102,10 +124,14 @@ doesn't have. Parked until there's a clean headless path.
 ## Not planned
 
 - **Autonomous posting** — the approval gate is the product. No.
-- **Replies, likes, follows, DMs** — the skill touches nothing on X except
-  publishing your own approved package. (The one exception: the link reply
-  under the skill's own just-published post, approved as part of the same
-  package. Replies to anyone else stay off the table.)
+- **Sending replies, likes, follows, DMs** — the skill never performs any
+  of these on X. Two narrow exceptions exist, and both stay in your
+  hands: the link reply under the skill's own just-published post
+  (approved as part of the same package), and the read of a single post
+  you explicitly forwarded for reply drafting (item 6) — where drafting
+  is all it does; the send is yours, from your own client. Automated
+  replies to other accounts stay off the table for good: that is the
+  thing X's automation rules suspend accounts for.
 - **Gemini subscription backend** — Google ended consumer Gemini CLI OAuth
   in June 2026; only the API-key path remains, which defeats the
   no-API-bill design.

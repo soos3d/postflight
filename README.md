@@ -64,6 +64,15 @@ build-in-public (3). Personal pillars — a hobby backed by a photo
 library, a craft you teach — are per-install and live in one untracked
 file; see [docs/CUSTOMIZE.md](docs/CUSTOMIZE.md).
 
+Two things happen outside the daily loop. A weekly maintenance turn
+refreshes the content backlog and reads last week's posts' metrics into
+a Telegram digest (median impressions by pillar and format, follower
+delta), so adjusting the schedule is an informed edit rather than a
+guess. And you can forward someone's post link to the bot to get two or
+three reply options drafted in your voice — each has to carry code, a
+gotcha, or a real number, and sending them stays manual, from your own
+client.
+
 ## Quickstart
 
 Have three things ready:
@@ -134,10 +143,13 @@ symlink instead. Posting times are cron jobs; change them by rerunning
 
 ## Guardrails
 
-- Publishes one approved package and does nothing else on X: the post,
+- Publishes one approved package and sends nothing else on X: the post,
   plus — for repo posts — one reply under that same just-published post
   carrying the link, approved together as a unit. No replies to anyone
-  else, no likes, follows, or DMs, ever.
+  else, no likes, follows, or DMs, ever. Beyond publishing, it reads
+  exactly two things: its own posts' metrics in the weekly maintenance
+  turn, and a single post you explicitly forward for reply drafting —
+  where drafting is all it does; sending stays yours.
 - Publishing requires the exact word `ship` from your Telegram user id
   while a draft is pending. Anything else is an edit request; anyone else
   is ignored. Drafts expire after 24 hours.
