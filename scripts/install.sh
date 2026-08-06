@@ -126,10 +126,12 @@ EOF
 if [[ $QUIET -eq 0 ]]; then
   cat <<EOF
 
-Still to set up: a model, X API access, Telegram approvals, and cron. The
-wizard does all four and skips whatever already works:
+A model, X API access, Telegram approvals, and cron complete the install.
+The wizard sets up whatever is missing and leaves the rest alone, so it
+reads the same on a first run as it does after an upgrade:
 
-  $REPO_DIR/scripts/setup.sh
+  $REPO_DIR/scripts/setup.sh --check   # report every layer, change nothing
+  $REPO_DIR/scripts/setup.sh           # set up whatever is missing
 
 Every command it runs is written out in docs/SETUP-MANUAL.md, if you would
 rather do them by hand.
