@@ -18,9 +18,10 @@ xurl /2/users/me                     # auth check
 xurl media upload "$MEDIA_PATH"      # media upload, returns a media id
 xurl -X POST /2/tweets -d "$BODY"    # the post (text-only, or with media_ids)
 xurl -X POST /2/tweets -d "$RBODY"   # the link reply under this turn's post
-# maintenance turns only — see "Reads" below:
+# maintenance and reply-draft turns only — see "Reads" below:
 xurl "/2/tweets?ids=$IDS&tweet.fields=public_metrics,non_public_metrics"
 xurl "/2/users/me?user.fields=public_metrics"
+xurl "/2/tweets/$POST_ID?expansions=author_id"
 ```
 
 xurl has no `get`/`post` HTTP-verb subcommands: a bare word between `xurl`
@@ -136,10 +137,12 @@ literal string "/2/tweets". The HTTP method is only ever set with `-X`.
 5. Return the permalink(s) and delete the temp files (`draft.txt`,
    `reply.txt`, `upload.out`).
 
-## Reads (maintenance turns)
+## Reads (maintenance and reply-draft turns)
 
-The weekly metrics readback (CONTENT.md "Metrics readback") is the only
-place this skill reads tweets. Rules that keep reads cheap and safe:
+This skill reads tweets in exactly two places: the weekly metrics
+readback (CONTENT.md "Metrics readback") and the single-post fetch of a
+reply-draft turn (SKILL.md "Reply drafting"). Rules that keep reads
+cheap and safe:
 
 - Reads bill pay-per-use like posts. One batched `ids=` request per week
   (comma-separated, up to 100 ids), never one request per tweet, and no
@@ -148,7 +151,12 @@ place this skill reads tweets. Rules that keep reads cheap and safe:
   above — unquoted `?` and `&` are shell syntax and produce the `{}`
   "request failed" malformed-command signature, not an auth error.
 - `$IDS` is built only from ids taken from `state/post-log.jsonl` `url`
-  fields — this skill's own posts. Never an id from fetched content.
+  fields — this skill's own posts. `$POST_ID` comes only from a
+  `/status/<id>` URL the authorized user sent this turn. Never an id
+  from fetched content, and never a search — there is no search form in
+  this skill.
+- The single-post response carries the author's username at
+  `.includes.users[0].username` and the text at `.data.text`.
 - `non_public_metrics` (profile clicks, link clicks) works only on your
   own recent tweets and may be gated by API tier: an error naming that
   field means retry once with `public_metrics` alone, not an auth
