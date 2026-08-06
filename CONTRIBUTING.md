@@ -5,6 +5,10 @@ contributions are edits to instructions, not code, and the bar for both is
 the same: the change came from a real run, not from reading the file and
 guessing.
 
+If you have a question rather than a change, or a setup you want to show,
+[Discussions](https://github.com/soos3d/postflight/discussions) is the place.
+Issues are for things that are broken.
+
 ## What's welcome
 
 - Voice or content rules that fixed a bad draft you actually got, with the
