@@ -156,7 +156,7 @@ literal string "/2/tweets". The HTTP method is only ever set with `-X`.
 
 This skill reads tweets in exactly two places: the weekly metrics
 readback (CONTENT.md "Metrics readback") and the single-post fetch of a
-reply-draft turn (SKILL.md "Reply drafting"). Rules that keep reads
+reply-draft turn (REPLY-DRAFTING.md). Rules that keep reads
 cheap and safe:
 
 - Reads bill pay-per-use like posts. One batched `ids=` request per week
@@ -211,35 +211,8 @@ cheap and safe:
 
 ## One-time setup (user)
 
-1. Create an X developer account and, at console.x.com, a **project with
-   the app inside it** — a standalone app authenticates but fails every v2
-   call with `client-not-enrolled`. The project needs a package with write
-   access; the entry tier covers 3 posts/day with room to spare. Note that
-   a builds slot ships two posts (the tweet plus its link reply), so budget
-   roughly 4-5 posts/day of API quota and billing. Observed billing is
-   ~$0.02 per post (X's pricing page lists $0.015, and $0.20 for posts
-   containing a URL — the reply carries the URL). Media upload has no
-   listed price; check the usage meter after the first real upload.
-2. In the app's User authentication settings: enable OAuth 2.0, type
-   "Web App, Automated App or Bot", callback URI exactly
-   `http://localhost:8080/callback`, any real website URL.
-3. Install xurl (release binaries from github.com/xdevplatform/xurl), then:
-
-   ```sh
-   xurl auth apps add postflight --client-id CLIENT_ID --client-secret CLIENT_SECRET
-   xurl auth oauth2 --app postflight    # browser consent; grants offline.access
-   xurl auth default postflight         # so bare xurl commands use this app
-   xurl /2/users/me                   # prints your handle when it all works
-   ```
-
-   The `offline.access` scope grants a refresh token, so headless runs never
-   re-prompt for consent. The consent must also include `media.write` for
-   media posts — current xurl versions request it; a token minted by an
-   older xurl 403s on upload until you re-run `xurl auth oauth2 --app
-   postflight`. The `apps add` command puts the client secret in
-   your shell history as typed — prefix it with a space (with
-   `HIST_IGNORE_SPACE`/`ignorespace` set) or scrub the history line after,
-   and rotate the secret if it leaked. `setup.sh` avoids this with a hidden
-   prompt.
-4. Tokens live in `~/.xurl`. For a server deployment, run the auth locally
-   and copy that directory over. Never commit it or copy it into skill state.
+Not your work. The user does it once, with `scripts/setup.sh` or the
+walkthrough in the repo's `docs/SETUP-MANUAL.md` — an X project with the
+app inside it, OAuth 2.0 consent, and `xurl auth`. It is named here only
+so you can point at it: when auth is missing or expired, say so and name
+that doc. Never run any of it yourself, and never touch `~/.xurl`.

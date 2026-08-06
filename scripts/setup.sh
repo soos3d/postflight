@@ -193,7 +193,7 @@ step_skill() {
   if [[ $DEV_MODE -eq 1 ]]; then
     if dev_install_ok "$dest"; then ok "skill symlinked and trusted at $dest"; return 0; fi
     if [[ $CHECK_ONLY -eq 1 ]]; then todo "dev install missing, wrong target, or symlink not trusted"; return 0; fi
-    bash "$REPO_DIR/scripts/install.sh" --dev
+    bash "$REPO_DIR/scripts/install.sh" --dev --quiet
     if ! symlink_trusted; then
       echo "  Trusting the symlink target in OpenClaw config (skills.load.allowSymlinkTargets)."
       openclaw config set skills.load.allowSymlinkTargets "[\"$REPO_DIR/skill\"]"
@@ -203,7 +203,7 @@ step_skill() {
   fi
   if [[ -f "$dest/SKILL.md" && ! -L "$dest" ]]; then ok "skill installed at $dest"; return 0; fi
   if [[ $CHECK_ONLY -eq 1 ]]; then todo "skill not installed"; return 0; fi
-  bash "$REPO_DIR/scripts/install.sh"
+  bash "$REPO_DIR/scripts/install.sh" --quiet
   ok "skill installed at $dest"
 }
 
@@ -487,6 +487,8 @@ cron_field_msg() { jq -r '[.payload.message?, .message?, .msg?, .prompt?] | map(
 cron_field_expr() { jq -r '[.schedule.expr?, .expr?, .schedule?, .cron?] | map(select(type=="string")) | first // empty' <<<"$1"; }
 cron_field_tz() { jq -r '[.schedule.tz?, .tz?, .timezone?] | map(select(type=="string")) | first // empty' <<<"$1"; }
 
+# Supported until 2026-11-01, then this function and its call site come out
+# (see the matching note in install.sh).
 # Jobs registered before the x-poster -> postflight rename carry the old name,
 # and cron_missing keys on the name — without this, a rerun would register a
 # second full set and every slot would draft twice. Recreates each job under

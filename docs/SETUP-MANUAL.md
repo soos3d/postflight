@@ -98,6 +98,10 @@ create an app **inside it**.
 > on a package with write access. The entry-level tier covers three posts a
 > day with room to spare.
 
+Budget roughly 4–5 posts a day of quota rather than 3: a repo post ships as
+two, the tweet plus its link reply. Posting is pay-per-use since the free
+tier ended in Feb 2026, observed at about $0.02 per post.
+
 ### 3.2 Configure authentication
 
 In the app's **User authentication settings**:
@@ -145,10 +149,29 @@ xurl /2/users/me              # prints your handle when everything works
 > leaked. `setup.sh` avoids this with a hidden prompt.
 
 The consent flow requests `offline.access`, so headless runs refresh their
-own tokens and never re-prompt. Tokens live in `~/.xurl`. For a server,
-authorize locally and copy that directory over.
+own tokens and never re-prompt, and `media.write`, which media posts need.
+A token minted by an older xurl predates that scope and 403s on the first
+upload; re-running `xurl auth oauth2 --app postflight` fixes it.
 
-### 3.5 Optional: media tools
+Tokens live in `~/.xurl`. For a server, authorize locally and copy that
+directory over.
+
+### 3.5 No developer app? The browser fallback
+
+Everything above is the default path and the one built for headless
+servers. If you can't get API access, the skill can drive a logged-in
+browser instead:
+
+```sh
+openclaw browser open https://x.com     # log in once, in the managed profile
+```
+
+Then set `"postVia": "browser"` in `state/settings.json`. That mode needs a
+machine with a display, publishes single text posts only, and sits outside
+X's automation rules — see `PUBLISH-BROWSER.md` in the skill folder before
+you rely on it.
+
+### 3.6 Optional: media tools
 
 Repo posts are media-first — a demo GIF or code screenshot, with the link
 posted as a reply. The agent generates that media with whatever it finds on
@@ -239,14 +262,41 @@ Then run one full `ship` and confirm the permalink.
 
 ### 6.3 Register cron
 
-Only now. The installer prints the exact commands: three drafting turns a
-day plus a weekly maintenance turn (backlog refresh and metrics readback),
-all in isolated sessions.
+Only now. Four jobs: three drafting turns a day plus a weekly maintenance
+turn (backlog refresh and metrics readback), all in isolated sessions.
+These are exactly what `setup.sh` registers.
+
+```sh
+TO=YOUR_TELEGRAM_USER_ID
+TZ_NAME=America/New_York
+
+openclaw cron create "30 9 * * *" \
+  "Run the postflight skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval." \
+  --name postflight-own-work --session isolated --tz "$TZ_NAME" --channel telegram --to "$TO"
+
+openclaw cron create "30 12 * * *" \
+  "Run the postflight skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval." \
+  --name postflight-ai-news --session isolated --tz "$TZ_NAME" --channel telegram --to "$TO"
+
+openclaw cron create "0 15 * * *" \
+  "Run the postflight skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval." \
+  --name postflight-aviation --session isolated --tz "$TZ_NAME" --channel telegram --to "$TO"
+
+openclaw cron create "0 8 * * 1" \
+  "postflight maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections, then run the weekly metrics readback per CONTENT.md \"Metrics readback\". Do not draft or publish." \
+  --name postflight-backlog --session isolated --tz "$TZ_NAME" --channel telegram --to "$TO"
+```
 
 > **Always pass `--channel telegram --to YOUR_USER_ID`.** Cron delivery
 > defaults to `announce -> last`, which has no route in an isolated session
 > and fails closed. `setup.sh` does this for you; by hand it's the easiest
 > thing to forget.
+
+> The three drafting job **names** are historical — `own-work`, `ai-news`,
+> and `aviation` were the original fixed topics. Keep them as written:
+> `setup.sh` matches on those names, and renaming one makes it register a
+> duplicate slot. What each job posts comes from the weekly grid, not its
+> name.
 
 The example times target US engagement windows, anchored to
 `America/New_York` so they track US DST. Shift them to fit your audience

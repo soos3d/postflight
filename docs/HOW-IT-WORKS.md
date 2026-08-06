@@ -12,8 +12,10 @@ Model auth reuses your Claude or ChatGPT/Codex subscription, so there's no
 separate API bill. The setup wizard asks which you have. The voice rules
 were tuned on Claude.
 
-Postflight is one skill. The platform supplies the moving parts, and five
-markdown files in `skill/postflight/` tell the agent what to do:
+Postflight is one skill. The platform supplies the moving parts, and a
+handful of markdown files in `skill/postflight/` tell the agent what to do.
+`SKILL.md` is the one every turn reads; the rest get read on demand, when
+the turn actually needs them.
 
 | File | Job |
 |---|---|
@@ -22,6 +24,8 @@ markdown files in `skill/postflight/` tell the agent what to do:
 | `CONTENT.md` | The pillar schedule, media recipes, and where material comes from |
 | `PUBLISH-API.md` | Posting through the X API with xurl, including media upload and the link reply |
 | `PUBLISH-BROWSER.md` | Browser fallback for accounts without a developer app |
+| `REPLY-DRAFTING.md` | The forwarded-link turn: draft reply options, send nothing |
+| `PHOTO-INGESTION.md` | The photo-attachment turn: file a photo into a library |
 
 ## The daily loop
 
