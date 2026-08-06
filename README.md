@@ -17,7 +17,8 @@ mode.
 
 This skill was called x-poster until v1.0.0. Old links still resolve.
 Upgrading an existing install takes one extra command, in [Upgrading from
-x-poster](docs/DEPLOY-VPS.md#upgrading-from-x-poster).
+x-poster](docs/DEPLOY-VPS.md#upgrading-from-x-poster) — automatic until
+2026-11-01, by hand after that.
 
 <!-- TODO(screenshot): the page's strongest asset goes here. Save the
      shot as docs/assets/approval-flow.png and replace this comment with:

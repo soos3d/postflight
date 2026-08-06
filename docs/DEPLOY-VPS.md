@@ -184,6 +184,13 @@ cd ~/postflight && git pull && ./scripts/install.sh   # state/ and *.local.md ar
 The skill was called x-poster before v1.0.0. Pulling that rename needs one
 extra step, `setup.sh`, because the cron jobs carry the old name too:
 
+> **This runs automatically until 2026-11-01.** After that the migration
+> code comes out of `install.sh` and `setup.sh`. Upgrading a pre-v1.0.0
+> install later still works, by hand: move `state/` and your `*.local.md`
+> files from `skills/x-poster/` to `skills/postflight/`, delete the old
+> directory, then delete and recreate the cron jobs (the commands are in
+> [SETUP-MANUAL.md](SETUP-MANUAL.md#6-test-then-schedule)).
+
 ```sh
 cd ~/postflight && git pull
 ./scripts/install.sh    # moves state/ and *.local.md to skills/postflight/

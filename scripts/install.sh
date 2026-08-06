@@ -10,14 +10,16 @@ WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
 SKILL_DEST="$WORKSPACE/skills/postflight"
 
 MODE="copy"
-if [[ $# -gt 0 ]]; then
-  if [[ "$1" == "--dev" ]]; then
-    MODE="dev"
-  else
-    echo "usage: install.sh [--dev]" >&2
-    exit 1
-  fi
-fi
+QUIET=0
+for arg in "$@"; do
+  case "$arg" in
+    --dev)   MODE="dev" ;;
+    # setup.sh runs this script as one of its steps and prints its own
+    # progress, so it suppresses the closing pointer to itself.
+    --quiet) QUIET=1 ;;
+    *) echo "usage: install.sh [--dev] [--quiet]" >&2; exit 1 ;;
+  esac
+done
 
 if [[ ! -d "$WORKSPACE" ]]; then
   echo "error: OpenClaw workspace not found at $WORKSPACE" >&2
@@ -28,6 +30,9 @@ fi
 mkdir -p "$WORKSPACE/skills"
 
 # ---------- one-time: this skill was named x-poster before the rename ----------
+# Supported until 2026-11-01, then this whole block comes out (along with
+# cron_migrate_names in setup.sh and the upgrade notes in README /
+# docs/DEPLOY-VPS.md). Temporary migration code, dated so it stays temporary.
 
 LEGACY_DEST="$WORKSPACE/skills/x-poster"
 PARKED_DEST="$WORKSPACE/x-poster-pre-rename-backup"
@@ -116,40 +121,17 @@ Skill files: $SKILL_SRC
 Settings:    $SKILL_SRC/state/settings.json
 Voice anchor (add 3-5 of your own tweets): $SKILL_SRC/voice-examples.local.md
 Your pillars (copy pillars.example.md here and edit): $SKILL_SRC/pillars.local.md
-
-Next steps (one-time, interactive; details in the repo README):
-  1. Model auth (Claude subscription reuse; needs a real terminal):
-       openclaw models auth setup-token --provider anthropic
-       openclaw config set agents.defaults.model.primary "anthropic/claude-fable-5"
-  2. X API auth (default posting mode; see skill PUBLISH-API.md):
-       at console.x.com create a project with an app INSIDE it, enable
-       OAuth 2.0 (callback http://localhost:8080/callback), install xurl, then:
-       xurl auth apps add postflight --client-id ID --client-secret SECRET
-       xurl auth oauth2 --app postflight
-       xurl auth default postflight
-       xurl /2/users/me   # prints your handle when it all works
-     (typing the secret inline leaves it in shell history — prefer running
-      scripts/setup.sh, which prompts for it hidden; see docs/SETUP-MANUAL.md)
-     (browser fallback instead: openclaw browser open https://x.com and log in,
-      then set "postVia": "browser" in the settings file below)
-  3. Telegram approvals (optional, enables ship/skip from your phone):
-       create a bot with @BotFather, save its token to a private file
-       (kept out of shell history; SETUP-MANUAL.md shows the exact commands):
-       openclaw channels add --channel telegram --token-file ~/.openclaw/credentials/telegram-bot-token
-       openclaw gateway install
-       message the bot once; it replies with your user id and a pairing code:
-       openclaw pairing approve telegram <CODE>
-       openclaw config set commands.ownerAllowFrom '["telegram:<YOUR_USER_ID>"]'
-       openclaw gateway restart
-       put your Telegram user id into "telegramTo" in the settings file above
-       (if the bot later ignores skill edits or a model change, send /new to
-        the bot: the persistent session only re-reads config when it starts)
-  4. Cron (after a supervised test run; times target US engagement windows —
-     adjust to your audience and waking hours, and note every draft waits on
-     your Telegram reply). The --channel/--to flags are required: isolated
-     sessions have no default route, so a job without them fails closed:
-       openclaw cron create "30 9 * * *"  "Run the postflight skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval." --name postflight-own-work --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "30 12 * * *" "Run the postflight skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval." --name postflight-ai-news --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "0 15 * * *"  "Run the postflight skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval." --name postflight-aviation --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "0 8 * * 1"   "postflight maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections, then run the weekly metrics readback per CONTENT.md \"Metrics readback\". Do not draft or publish." --name postflight-backlog --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
 EOF
+
+if [[ $QUIET -eq 0 ]]; then
+  cat <<EOF
+
+Still to set up: a model, X API access, Telegram approvals, and cron. The
+wizard does all four and skips whatever already works:
+
+  $REPO_DIR/scripts/setup.sh
+
+Every command it runs is written out in docs/SETUP-MANUAL.md, if you would
+rather do them by hand.
+EOF
+fi
