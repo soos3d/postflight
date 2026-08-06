@@ -13,6 +13,19 @@ was a bot posting to my real account unsupervised, so the contract is
 fixed: the agent drafts, you approve, it ships. There is no autonomous
 mode.
 
+<!-- TODO(screenshot): the page's strongest asset goes here. Save the
+     shot as docs/assets/approval-flow.png and replace this comment with:
+
+     ![the approval flow](docs/assets/approval-flow.png)
+
+     *The whole interface: a draft arrives, you reply `ship`, it posts.*
+
+     What it needs to show, in one vertical crop of the Telegram thread:
+     the bot's draft with its media attached, the reply `ship`, and the
+     bot's confirmation carrying the permalink. Nothing in that thread
+     leaks a user id; redact the bot's @name only if you'd rather not
+     publish it. A real phone screenshot beats a mockup. -->
+
 ## How it works
 
 OpenClaw is a personal AI agent that runs on your own machine. It connects
@@ -223,8 +236,8 @@ The interesting contributions here are instructions, not code: voice rules
 that survived real runs, content angles that produced posts worth
 shipping, setup fixes for platforms that broke, a publish doc for another
 network. See [CONTRIBUTING.md](CONTRIBUTING.md); the one non-negotiable is
-the approval gate. What's coming next — engagement readback, thread
-support, a second network — lives in [ROADMAP.md](ROADMAP.md).
+the approval gate. What's coming next (thread support, a second network,
+per-slot model overrides) lives in [ROADMAP.md](ROADMAP.md).
 
 ## License
 
