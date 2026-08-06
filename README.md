@@ -134,10 +134,13 @@ symlink instead. Posting times are cron jobs; change them by rerunning
 
 ## Guardrails
 
-- Publishes one approved package and does nothing else on X: the post,
+- Publishes one approved package and sends nothing else on X: the post,
   plus — for repo posts — one reply under that same just-published post
   carrying the link, approved together as a unit. No replies to anyone
-  else, no likes, follows, or DMs, ever.
+  else, no likes, follows, or DMs, ever. Beyond publishing, it reads
+  exactly two things: its own posts' metrics in the weekly maintenance
+  turn, and a single post you explicitly forward for reply drafting —
+  where drafting is all it does; sending stays yours.
 - Publishing requires the exact word `ship` from your Telegram user id
   while a draft is pending. Anything else is an edit request; anyone else
   is ignored. Drafts expire after 24 hours.

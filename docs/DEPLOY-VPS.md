@@ -151,7 +151,11 @@ cd ~/x-poster && git pull && ./scripts/install.sh   # state/ and *.local.md are 
 Personal config (`pillars.local.md`, `voice-examples.local.md`) is
 untracked, so it doesn't travel through git: it reaches a new box via
 `migrate-state.sh` (which carries every `*.local.md`) or a plain `scp`
-of the files into `~/.openclaw/workspace/skills/x-poster/`.
+of the files into `~/.openclaw/workspace/skills/x-poster/`. The same
+goes for a photo library — it lives under `state/media/photos/`, which
+`migrate-state.sh` carries with the rest of the state; it's the one
+piece of state that keeps originating on your laptop, so `scp` new
+photos (or run `ingest-photo.sh` on the server) as you add them.
 
 If the persistent Telegram session ignores an update, send `/new` to the
 bot — sessions only re-read config and skill files when they start.

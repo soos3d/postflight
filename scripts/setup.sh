@@ -363,7 +363,8 @@ step_media_tools() {
   if command -v exiftool >/dev/null; then
     ok "exiftool present (photo-library ingestion)"
   else
-    todo "exiftool not installed — only needed for photo pillars; scripts/ingest-photo.sh requires it to strip EXIF/GPS"
+    # Informational, not a todo: most installs have no photo pillar.
+    echo "  note: exiftool not installed — only needed if you add a photo pillar (scripts/ingest-photo.sh uses it to strip EXIF/GPS)"
   fi
 }
 
@@ -496,7 +497,7 @@ cron_migrate_messages() {
     want="$(cron_msg_for "$name")"
     [[ "$cur" == "$want" ]] && continue
     if ! interactive; then
-      todo "cron $name still has the pre-pillar message — rerun setup.sh (no --check) to migrate"
+      todo "cron $name still has an outdated message — rerun setup.sh (no --check) to migrate"
       continue
     fi
     expr="$(jq -r '[.schedule.expr?, .expr?, .schedule?, .cron?] | map(select(type=="string")) | first // empty' <<<"$job")"
@@ -510,7 +511,7 @@ cron_migrate_messages() {
     openclaw cron create "$expr" "$want" \
       --name "$name" --session isolated --tz "$tz" \
       --channel telegram --to "$to" >/dev/null
-    ok "cron $name migrated to the pillar-slot message ($expr @ $tz)"
+    ok "cron $name migrated to the current message ($expr @ $tz)"
   done
 }
 

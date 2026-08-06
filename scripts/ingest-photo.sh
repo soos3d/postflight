@@ -19,25 +19,28 @@ set -euo pipefail
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 ok()  { printf '  ok: %s\n' "$*"; }
 
+# The library must live where the agent reads it: the installed copy if
+# this machine has one, else this checkout (covers --dev symlink installs,
+# where both paths are the same tree).
 default_dir() {
-  local installed="$HOME/.openclaw/workspace/skills/x-poster/state/media/photos"
+  local installed="$HOME/.openclaw/workspace/skills/x-poster"
   local checkout
-  checkout="$(cd "$(dirname "$0")/.." && pwd)/skill/x-poster/state/media/photos"
-  if [[ -d "$(dirname "$(dirname "$installed")")" ]]; then
-    printf '%s' "$installed"
+  checkout="$(cd "$(dirname "$0")/.." && pwd)/skill/x-poster"
+  if [[ -d "$installed" ]]; then
+    printf '%s' "$installed/state/media/photos"
   else
-    printf '%s' "$checkout"
+    printf '%s' "$checkout/state/media/photos"
   fi
 }
 
 # One-line YAML double-quoted scalar: escape backslashes and quotes,
-# flatten any newline to a space.
+# flatten newlines, carriage returns, and tabs to spaces.
 yaml_escape() {
-  printf '%s' "$1" | tr '\n' ' ' | sed 's/\\/\\\\/g; s/"/\\"/g'
+  printf '%s' "$1" | tr '\n\r\t' '   ' | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
 
 slugify() {
-  printf '%s' "$1" | tr '[:upper:]' '[:lower:]' \
+  printf '%s' "$1" | tr -d '\n\r' | tr '[:upper:]' '[:lower:]' \
     | sed 's/[^a-z0-9]\{1,\}/-/g; s/^-//; s/-$//'
 }
 
@@ -54,6 +57,7 @@ done
 [[ $# -ge 3 ]] || die 'usage: ingest-photo.sh [options] <photo> "<note>" <tag> [tag ...]'
 photo="$1" note="$2"
 shift 2
+case "$photo" in -*) photo="./$photo" ;; esac
 
 command -v exiftool >/dev/null \
   || die "exiftool required (macOS: brew install exiftool · Debian/Ubuntu: apt install libimage-exiftool-perl)"
@@ -63,14 +67,14 @@ command -v exiftool >/dev/null \
 ext="$(printf '%s' "${photo##*.}" | tr '[:upper:]' '[:lower:]')"
 case "$ext" in
   jpg|jpeg|png) ;;
-  heic) die "X does not take HEIC — convert first (macOS: sips -s format jpeg '$photo' --out out.jpg)" ;;
+  heic) die "X does not take HEIC — convert it first (macOS: sips -s format jpeg <file> --out out.jpg)" ;;
   *)    die "unsupported extension .$ext (jpg, jpeg, png)" ;;
 esac
 
 size="$(wc -c < "$photo" | tr -d ' ')"
 max=$((5 * 1024 * 1024))
 [[ "$size" -le "$max" ]] \
-  || die "$((size / 1024 / 1024)) MB is over X's 5 MB image cap — resize first (macOS: sips -Z 2048 '$photo')"
+  || die "$((size / 1024 / 1024)) MB is over X's 5 MB image cap — resize it first (macOS: sips -Z 2048 <file>)"
 
 tags=()
 for t in "$@"; do
@@ -106,16 +110,20 @@ if ! strip_out="$(exiftool -all= -overwrite_original "$dir/$dest" 2>&1)"; then
   rm -f "$dir/$dest"
   die "exiftool could not rewrite $base (${strip_out##*$'\n'}) — not adding it"
 fi
-gps="$(exiftool -s3 -GPSLatitude -GPSLongitude "$dir/$dest" 2>/dev/null || true)"
+# The verify must fail closed: an exiftool error here is NOT a clean scan.
+if ! gps="$(exiftool -s3 -gps:all -XMP:Location -IPTC:Sub-location -City "$dir/$dest" 2>&1)"; then
+  rm -f "$dir/$dest"
+  die "could not verify the metadata strip ($gps) — not adding the photo"
+fi
 if [[ -n "$gps" ]]; then
   rm -f "$dir/$dest"
-  die "GPS data survived the strip — not adding the photo"
+  die "location metadata survived the strip — not adding the photo"
 fi
 ok "EXIF stripped, filed as $dest"
 
 tag_list=""
 for t in "${tags[@]}"; do
-  tag_list="${tag_list:+$tag_list, }$t"
+  tag_list="${tag_list:+$tag_list, }\"$t\""
 done
 
 manifest="$dir/manifest.yaml"

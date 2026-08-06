@@ -64,8 +64,10 @@ CONTENT.md "Photo library".
 
 Two rules the script can't enforce: keep home-adjacent spots out of the
 library entirely, and post after leaving a location, never from it. The
-library lives under `state/`, so it is never committed; back it up with
-`scripts/migrate-state.sh` like the rest of the state.
+library lives under `state/`, so it is never committed; a plain `cp -R`
+of the photos directory is a full backup (`migrate-state.sh` carries it
+too when you migrate machines — but that tarball also contains live
+credentials, so don't reach for it as a casual photo backup).
 
 ## 2. Your voice — `voice-examples.local.md`
 
