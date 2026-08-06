@@ -94,4 +94,6 @@ clawhub skill publish "$STAGE" \
   --name "$NAME" \
   --version "$VERSION"
 
-printf '\nPublished. Verify at https://clawhub.ai/%s\n' "$SLUG"
+# The listing lives under the publisher handle; a bare /<slug> is a 404.
+PUBLISHER="$(clawhub whoami 2>/dev/null | grep -oE '[A-Za-z0-9_-]+' | tail -1 || true)"
+printf '\nPublished. Verify at https://clawhub.ai/%s/skills/%s\n' "${PUBLISHER:-<your-handle>}" "$SLUG"
