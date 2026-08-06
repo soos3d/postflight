@@ -34,13 +34,22 @@ About 10 minutes. Create the box with SSH key auth, then:
 adduser poster && usermod -aG sudo poster
 rsync -a ~/.ssh /home/poster/ && chown -R poster:poster /home/poster/.ssh
 ufw allow OpenSSH && ufw enable          # everything the skill does is outbound
-apt update && apt install -y unattended-upgrades git jq rsync curl
+apt update && apt install -y unattended-upgrades git jq rsync curl python3
 ```
+
+`setup.sh` refuses to continue without `git`, `curl`, `jq`, `rsync`, and
+`python3`. That last one is easy to miss on a minimal image: it runs X's
+character weighting on every draft.
 
 Log back in as `poster` for everything below.
 
 Recommended while you're here: disable root login and password auth in
 `/etc/ssh/sshd_config`.
+
+Also install the [`gh` CLI](https://cli.github.com/) and run `gh auth login`
+as `poster`. It is how `source: repos` pillars read your repos; without it
+`setup.sh` reports a todo rather than failing, and those slots fall back every
+turn.
 
 Optional but worth it — install `vhs` and/or `freeze` (Linux release
 binaries on their GitHub pages) so repo posts get their demo media.
@@ -177,7 +186,17 @@ The laptop is the dev machine. The server only consumes git:
 # laptop: edit, commit, push
 # server:
 cd ~/postflight && git pull && ./scripts/install.sh   # state/ and *.local.md are never touched
+./scripts/setup.sh                                    # only if the release changed config
 ```
+
+Then send `/new` to the bot. The persistent Telegram session reads the skill
+files only when it starts, so it keeps the old copy until you reset it. Cron
+slots run in isolated sessions and pick changes up on their next run.
+
+`install.sh` only moves files. A release that changes OpenClaw *config* — the
+model fallback chain in v1.1.0, for instance — lands through `setup.sh`, which
+configures whatever is missing and leaves everything else alone. Release notes
+say when it's needed; running it anyway is safe.
 
 ### Upgrading from x-poster
 

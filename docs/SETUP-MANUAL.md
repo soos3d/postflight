@@ -67,7 +67,9 @@ Fable has its own usage pool. Once it's spent there's still Opus budget on
 the same subscription, and the fallback chain drops to it instead of failing
 the slot. Run `models list` first: the catalog differs by OpenClaw release,
 and `config set` accepts an id that doesn't exist without complaining — you
-find out when an unattended slot dies.
+find out when an unattended slot dies. `setup.sh` tries
+`anthropic/claude-opus-5` ahead of these two and keeps it only when the
+install lists it; do the same by hand if it's in your catalog.
 
 **If you have a ChatGPT/Codex subscription:**
 
@@ -133,8 +135,10 @@ XURL_VERSION=1.3.1
 curl -sLO "https://github.com/xdevplatform/xurl/releases/download/v${XURL_VERSION}/xurl_Darwin_arm64.tar.gz"
 curl -sLO "https://github.com/xdevplatform/xurl/releases/download/v${XURL_VERSION}/xurl_${XURL_VERSION}_checksums.txt"
 grep " xurl_Darwin_arm64.tar.gz$" "xurl_${XURL_VERSION}_checksums.txt" | shasum -a 256 -c -
-tar xzf xurl_Darwin_arm64.tar.gz && mv xurl ~/.local/bin/
+tar xzf xurl_Darwin_arm64.tar.gz && mkdir -p ~/.local/bin && mv xurl ~/.local/bin/
 ```
+
+`~/.local/bin` has to be on your `PATH` — the skill calls `xurl` by name.
 
 > **Pin the version and verify the checksum.** This binary is about to be
 > handed your client secret, and `latest` is a mutable pointer. `setup.sh`
@@ -232,8 +236,12 @@ openclaw gateway restart
 
 ### 4.3 Set the approval gate
 
-Put the same user id in `skill/postflight/state/settings.json` as
-`telegramTo`.
+Put the same user id in the **installed** skill's `state/settings.json` as
+`telegramTo` — `~/.openclaw/workspace/skills/postflight/state/settings.json`
+after a default install, or `skill/postflight/state/settings.json` in the
+checkout if you installed with `--dev` (same tree). `install.sh` never copies
+`state/`, so editing the checkout's copy after a copy install changes nothing
+the agent reads.
 
 That field is the approval gate: only that sender can ship a draft. While
 it's empty the skill runs in draft mode, writing to `state/drafts.md`,

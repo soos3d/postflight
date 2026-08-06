@@ -1,1 +1,5 @@
 blank_issues_enabled: true
+contact_links:
+  - name: Question, setup help, or something to show
+    url: https://github.com/soos3d/postflight/discussions
+    about: Issues are for things that are broken. Everything else goes here.

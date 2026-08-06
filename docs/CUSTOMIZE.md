@@ -27,8 +27,8 @@ session re-reads files only when it starts.
 
 ## 1. Your content pillars
 
-The skill ships a generic schedule: repo demos plus insights. To add your
-own topics:
+The skill ships a generic schedule — `builds` (own-repo demos), `insights`,
+and `build-in-public`, 21 slots a week. To add your own topics:
 
 ```sh
 cd ~/.openclaw/workspace/skills/postflight   # or the checkout, with --dev
@@ -115,7 +115,9 @@ Three rules:
   whole flow friction-free.
 
 Caption lines like `tags: springs kayak`, `location: ...`, or
-`taken: 2026-06-14` override what's detected.
+`taken: 2026-06-14` override what's detected. If you run more than one
+`media: photos:<dir>` pillar, add `pillar: <name>` too — with several photo
+pillars the agent can't tell which library you meant and will ask.
 
 Seeding a real backlog goes faster through the shell: copy the photos over
 and run the script once per photo.
@@ -153,10 +155,12 @@ posts. Local config, never committed.
 The three daily slots are cron jobs. The defaults target US engagement
 windows.
 
-Change them by rerunning `./scripts/setup.sh`, or directly:
+Change them in place — `setup.sh` only asks for slot times when a job is
+*missing*, so a rerun leaves existing schedules alone:
 
 ```sh
-openclaw cron edit
+openclaw cron list                              # find the job id
+openclaw cron edit <id> --cron "0 10 * * *"     # new time, same route
 ```
 
 Cron messages are slot-numbered and pillar-agnostic ("slot 1 of the pillar

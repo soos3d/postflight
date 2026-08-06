@@ -1,6 +1,6 @@
 # Contributing
 
-Postflight is a handful of markdown files and three shell scripts. Most useful
+Postflight is a handful of markdown files and six bash scripts. Most useful
 contributions are edits to instructions, not code, and the bar for both is
 the same: the change came from a real run, not from reading the file and
 guessing.
@@ -40,8 +40,10 @@ shellcheck -S style scripts/*.sh scripts/hooks/* skill/postflight/*.sh
 ```
 
 CI runs the same shell checks on Linux and macOS, because `setup.sh` has to
-parse under bash 5 and bash 3.2. It also scans the full history for secrets
-and stages the skill for ClawHub to prove nothing personal would ship.
+parse under bash 5 and bash 3.2. It also scans the full history for secrets,
+stages the skill for ClawHub to prove nothing personal would ship, and checks
+every relative link in the markdown (external links are deliberately not
+checked — they rot on someone else's schedule).
 
 Leave `telegramTo` empty in `state/settings.json` and the skill runs in
 draft mode: drafts land in `state/drafts.md`, nothing is sent or posted.
