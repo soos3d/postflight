@@ -19,9 +19,16 @@ WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
 XURL_APP="postflight"
 XURL_VERSION="${XURL_VERSION:-1.3.1}"
 MODEL_ANTHROPIC="anthropic/claude-fable-5"
+# Anthropic fallbacks, best first. Fable has its own usage pool, so when it
+# runs dry there is still Opus budget on the same subscription. opus-5 is not
+# in every release's catalog yet, and the config schema does NOT validate
+# model ids — an unresolvable id writes fine and only dies inside an
+# unattended cron run — so these are filtered against what this install lists.
+MODEL_ANTHROPIC_FALLBACKS=(anthropic/claude-opus-5 anthropic/claude-opus-4-8 anthropic/claude-sonnet-5)
 # OpenAI ids, best first. gpt-5.6-sol is the Codex-subscription tier but only
 # newer OpenClaw releases list it; plain "openai/gpt-5.6" is deliberately
 # absent — it is the API-key alias and would bill a developer account.
+# The first listed one becomes the default, the rest become its fallbacks.
 MODEL_OPENAI_CANDIDATES=(openai/gpt-5.6-sol openai/gpt-5.6-terra openai/gpt-5.5)
 
 CHECK_ONLY=0
@@ -255,16 +262,57 @@ provider_ready() {
     and (.defaultModel | startswith($p + "/"))' >/dev/null
 }
 
-# The catalog varies by OpenClaw release (gpt-5.6-sol appears only in newer
-# ones), so resolve the default model against what this install actually
-# lists — a name the scheduler can't resolve fails every cron run.
-openai_pick_model() {
+# The catalog varies by OpenClaw release (gpt-5.6-sol and claude-opus-5 appear
+# only in newer ones), so resolve every model id against what this install
+# actually lists — a name the scheduler can't resolve fails every cron run,
+# and `config set` accepts an unknown id without complaint.
+# Prints the candidates that exist, one per line, in the order given.
+pick_models() {
+  local provider="$1"; shift
   local listed m
-  listed="$(openclaw models list --provider openai 2>/dev/null | awk '{print $1}')"
-  for m in "${MODEL_OPENAI_CANDIDATES[@]}"; do
-    grep -qxF "$m" <<<"$listed" && { printf '%s' "$m"; return 0; }
+  listed="$(openclaw models list --provider "$provider" 2>/dev/null | awk '{print $1}')"
+  for m in "$@"; do
+    grep -qxF "$m" <<<"$listed" && printf '%s\n' "$m"
   done
-  return 1
+  return 0
+}
+
+# A usage limit on the primary model kills every unattended cron slot, so the
+# chain drops to the next model instead. An existing chain is never rewritten —
+# whoever tuned it by hand keeps it.
+ensure_fallbacks() {
+  local provider="$1"; shift
+  # Not named "status": that is read-only in zsh, and these functions get
+  # sourced into other shells by the test harness.
+  local model_status current default picked desired
+  model_status="$(openclaw models status --json 2>/dev/null)" || true
+  current="$(printf '%s' "$model_status" | jq -r '(.fallbacks // []) | join(", ")')"
+  if [[ -n "$current" ]]; then ok "model fallbacks already set ($current)"; return 0; fi
+  if [[ $CHECK_ONLY -eq 1 ]]; then
+    todo "no model fallback configured — a usage limit on the primary model fails every cron slot"
+    return 0
+  fi
+  picked="$(pick_models "$provider" "$@")"
+  # The primary is in the OpenAI candidate list too; it must not fall back to
+  # itself.
+  default="$(printf '%s' "$model_status" | jq -r '.defaultModel // ""')"
+  if [[ -n "$default" && -n "$picked" ]]; then
+    picked="$(grep -vxF "$default" <<<"$picked" || true)"
+  fi
+  if [[ -z "$picked" ]]; then
+    todo "no fallback model in this OpenClaw's $provider catalog — primary only"
+    return 0
+  fi
+  desired="$(printf '%s\n' "$picked" | jq -Rsc 'split("\n") | map(select(length > 0))')"
+  openclaw config set agents.defaults.model.fallbacks "$desired" --strict-json >/dev/null
+  ok "model fallbacks (${picked//$'\n'/, })"
+}
+
+fallbacks_for() {
+  case "$1" in
+    anthropic) ensure_fallbacks anthropic "${MODEL_ANTHROPIC_FALLBACKS[@]}" ;;
+    openai)    ensure_fallbacks openai "${MODEL_OPENAI_CANDIDATES[@]}" ;;
+  esac
 }
 
 auth_anthropic() {
@@ -273,6 +321,7 @@ auth_anthropic() {
   openclaw config set agents.defaults.model.primary "$MODEL_ANTHROPIC"
   provider_ready anthropic || die "model auth still not detected after setup-token"
   ok "anthropic auth + default model ($MODEL_ANTHROPIC)"
+  fallbacks_for anthropic
 }
 
 auth_openai() {
@@ -283,11 +332,14 @@ auth_openai() {
   [[ "$(uname -s)" == "Linux" && -z "${DISPLAY:-}" ]] && flags+=(--device-code)
   echo "  OAuth against your ChatGPT account will start."
   openclaw models auth login --provider openai ${flags[@]+"${flags[@]}"} < "$TTY"
-  model="$(openai_pick_model)" \
+  # pick_models lists every match; the best one is the default.
+  model="$(pick_models openai "${MODEL_OPENAI_CANDIDATES[@]}" | head -1)"
+  [[ -n "$model" ]] \
     || die "no known Codex-subscription model in 'openclaw models list --provider openai' — update OpenClaw and rerun"
   openclaw config set agents.defaults.model.primary "$model"
   provider_ready openai || die "model auth still not detected after login"
   ok "openai auth + default model ($model)"
+  fallbacks_for openai
   # Released versions have rewritten Codex-subscription model routes to
   # API-billed ones during doctor --fix (openclaw#79461, #87650).
   echo "  Caution: after any 'openclaw doctor --fix', re-check the default model"
@@ -299,7 +351,13 @@ step_model() {
   step "Model auth (Claude or ChatGPT/Codex subscription, no API bill)"
   local p
   for p in anthropic openai; do
-    if provider_ready "$p"; then ok "$p auth + default model configured"; return 0; fi
+    if provider_ready "$p"; then
+      ok "$p auth + default model configured"
+      # An install that predates the fallback chain still needs one, so this
+      # runs on the already-configured path too, not just after a fresh auth.
+      fallbacks_for "$p"
+      return 0
+    fi
   done
   if ! interactive; then todo "model auth not configured (run without --check, in a terminal)"; return 0; fi
   echo "  Which subscription should draft the posts?"

@@ -86,6 +86,37 @@ It must show a subscription model — `openai/gpt-5.6-sol` or
 silently bills a developer account instead of your subscription. Never set
 it directly either.
 
+## The slots stopped drafting mid-week
+
+Most likely the primary model's usage pool is spent. Fable 5 has its own
+allowance, separate from the rest of the Claude subscription, and a cron slot
+that hits the limit dies inside OpenClaw — nothing in the skill can catch it.
+
+Check whether a fallback chain exists:
+
+```sh
+openclaw models status
+```
+
+If `fallbacks` is empty, add one. There's still Opus budget on the account
+when Fable runs out, so the slot drafts instead of failing:
+
+```sh
+openclaw models list --provider anthropic     # confirm the ids in your release
+openclaw config set agents.defaults.model.fallbacks \
+  '["anthropic/claude-opus-4-8","anthropic/claude-sonnet-5"]' --strict-json
+```
+
+`./scripts/setup.sh` does this for you, and leaves an existing chain alone.
+
+> `config set` accepts a model id that doesn't exist in your OpenClaw
+> release — no error at write time, just a dead cron run later. Always check
+> `models list` first.
+
+Cron slots run in isolated sessions and pick the chain up on their next run.
+The Telegram chat session pins its model config when it's created, so send
+`/new` to the bot for the change to reach it.
+
 ## Drafts sound generic
 
 Two likely causes, in order:

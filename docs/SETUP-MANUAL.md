@@ -55,10 +55,19 @@ either case.
 ```sh
 openclaw models auth setup-token --provider anthropic
 openclaw config set agents.defaults.model.primary "anthropic/claude-fable-5"
+openclaw models list --provider anthropic     # check these ids exist in your release
+openclaw config set agents.defaults.model.fallbacks \
+  '["anthropic/claude-opus-4-8","anthropic/claude-sonnet-5"]' --strict-json
 ```
 
 `setup-token` needs a real terminal. It walks you through a browser
 approval on claude.ai and stores the token.
+
+Fable has its own usage pool. Once it's spent there's still Opus budget on
+the same subscription, and the fallback chain drops to it instead of failing
+the slot. Run `models list` first: the catalog differs by OpenClaw release,
+and `config set` accepts an id that doesn't exist without complaining — you
+find out when an unattended slot dies.
 
 **If you have a ChatGPT/Codex subscription:**
 
@@ -66,10 +75,13 @@ approval on claude.ai and stores the token.
 openclaw models auth login --provider openai    # add --device-code on a headless box
 openclaw models list --provider openai          # pick your subscription tier from this list
 openclaw config set agents.defaults.model.primary "openai/gpt-5.6-sol"
+openclaw config set agents.defaults.model.fallbacks \
+  '["openai/gpt-5.6-terra","openai/gpt-5.5"]' --strict-json
 ```
 
 Use `openai/gpt-5.6-sol` if it's listed. Older OpenClaw releases show only
-`openai/gpt-5.6-terra`, which is the right choice there.
+`openai/gpt-5.6-terra`, which is the right choice there — in that case drop
+it from the fallback list, since a model can't fall back to itself.
 
 > **Never set plain `openai/gpt-5.6`.** That's the API-key alias, and it
 > silently bills a developer account instead of your subscription. For the

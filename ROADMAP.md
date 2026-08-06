@@ -25,7 +25,26 @@ Voice caveat: draft quality has only been validated on Claude. The first
 draft we ever got from a weak model was banned-slop; expect to tune
 `VOICE.md` compliance per model.
 
-### 2. Per-install pillar config — SHIPPED 2026-08-05
+### 2. Model fallback chain — SHIPPED 2026-08-06
+
+A usage limit on the primary model used to kill an unattended slot outright:
+one hardcoded model, no fallback, and the only 429 handling in the skill is
+for the X API. The wizard now also sets `agents.defaults.model.fallbacks` —
+Claude installs get Opus then Sonnet 5 behind Fable 5 (Fable's allowance is
+its own, so there's Opus budget left when it runs dry), Codex installs get
+the remaining subscription tiers behind their default.
+
+The chain is resolved against `openclaw models list`, keeping only ids the
+installed release actually has, because `config set` accepts an id that
+doesn't exist without an error — it fails at 9:30am inside a cron run
+instead. That's why `claude-opus-5` is in the candidate list ahead of
+`claude-opus-4-8` even though no release lists it yet: the day one does,
+installs pick it up on the next `setup.sh` with no edit here.
+
+An existing chain is never rewritten, and setup.sh configures one on
+already-authed installs too, not just fresh ones.
+
+### 3. Per-install pillar config — SHIPPED 2026-08-05
 
 The pillar schedule moved out of the tracked files: CONTENT.md now ships
 a generic default set (builds / insights / build-in-public) and an
@@ -35,7 +54,7 @@ Pillar behavior in SKILL.md is property-driven (`media:`, `link:`,
 `register:`, `source:`), so custom pillars need no instruction edits,
 and `git pull` never conflicts with personalization.
 
-### 3. Media posts — SHIPPED 2026-08-04
+### 4. Media posts — SHIPPED 2026-08-04
 
 Shipped bigger than planned: not just image support but media-first repo
 posts with the link in a self-reply (link-card posts are the format X
@@ -52,7 +71,7 @@ $0.20 per post containing a URL, but observed billing on this account is
 price — check the usage meter after the first real upload. The
 link-in-reply format bills a repo post as two posts.
 
-### 4. Engagement readback — SHIPPED 2026-08-05
+### 5. Engagement readback — SHIPPED 2026-08-05
 
 The Monday maintenance turn now pulls metrics for posts 7–14 days old in
 one batched read, logs them to `state/metrics.jsonl`, appends a dated
@@ -63,7 +82,7 @@ never steers. Cost caveat: API reads bill pay-per-use like posts, and
 `non_public_metrics` (profile clicks) may be tier-gated — the readback
 falls back to `public_metrics` and says so in the digest.
 
-### 5. Photo library pillars — SHIPPED 2026-08-05
+### 6. Photo library pillars — SHIPPED 2026-08-05
 
 `media: photos:<dir>` pillars now draw from a curated library described
 by a manifest: only photos deliberately added are postable, selection
@@ -75,7 +94,7 @@ photos can now be sent straight to the bot (as a file, with a caption
 as the note) — the agent suggests tags and runs that same script, so
 the script remains the only manifest writer.
 
-### 6. Reply drafting assist — SHIPPED 2026-08-05
+### 7. Reply drafting assist — SHIPPED 2026-08-05
 
 Forward someone's post link to the bot and it returns 2–3 reply options
 in your voice — each must carry code, a gotcha, or a number from your
@@ -86,7 +105,7 @@ promise there is about sending, and this feature sends nothing.
 
 ## Next
 
-### 7. Per-slot model overrides
+### 8. Per-slot model overrides
 
 OpenClaw's `openclaw cron edit <id> --model <ref>` lets each cron slot run a
 different model: cheap model for the Monday backlog refresh, strong model
@@ -94,7 +113,7 @@ for drafting. Mostly a documentation task now that provider choice
 (item 1) has shipped. Needs a live check first — openclaw#28905 reports cron overrides
 being ignored in some versions.
 
-### 8. Thread support
+### 9. Thread support
 
 Multi-tweet drafts approved as one unit, published as a reply chain
 (`reply.in_reply_to_tweet_id`). The building blocks shipped with media
@@ -104,7 +123,7 @@ generalize that package to N tweets.
 
 ## Later
 
-### 9. Second network: Bluesky
+### 10. Second network: Bluesky
 
 A new `PUBLISH-BLUESKY.md` following the same shape as the existing publish
 docs. Bluesky's token API needs no OAuth dance, which makes it the easiest
@@ -112,14 +131,14 @@ second network. Mastodon would follow the same pattern.
 [CONTRIBUTING.md](CONTRIBUTING.md) already invites publish docs for other
 networks — this is a good first contribution.
 
-### 10. Skip/edit feedback loop
+### 11. Skip/edit feedback loop
 
 When the owner skips a draft or asks for an edit, log the reason to a state
 file that future drafting turns read. The agent is forbidden from editing
 its own instruction files, so learning accumulates in `state/`, and proven
 lessons get promoted into `VOICE.md` by a human through git.
 
-### 11. Style refresh for headless installs
+### 12. Style refresh for headless installs
 
 `styleAccounts` study currently needs a browser session, which a VPS install
 doesn't have. Parked until there's a clean headless path.
@@ -131,7 +150,7 @@ doesn't have. Parked until there's a clean headless path.
   of these on X. Two narrow exceptions exist, and both stay in your
   hands: the link reply under the skill's own just-published post
   (approved as part of the same package), and the read of a single post
-  you explicitly forwarded for reply drafting (item 6) — where drafting
+  you explicitly forwarded for reply drafting (item 7) — where drafting
   is all it does; the send is yours, from your own client. Automated
   replies to other accounts stay off the table for good: that is the
   thing X's automation rules suspend accounts for.

@@ -10,7 +10,9 @@ service to deploy.
 
 Model auth reuses your Claude or ChatGPT/Codex subscription, so there's no
 separate API bill. The setup wizard asks which you have. The voice rules
-were tuned on Claude.
+were tuned on Claude. The wizard also configures a fallback chain, so a slot
+that finds the primary model's usage pool spent drops to the next model and
+still drafts.
 
 Postflight is one skill. The platform supplies the moving parts, and a
 handful of markdown files in `skill/postflight/` tell the agent what to do.
