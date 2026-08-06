@@ -29,10 +29,15 @@ package, not an engagement feature — it is the one reply the skill makes.
 Skill files are prompts; test them by running turns, not by rereading them.
 
 ```sh
-./scripts/setup.sh --dev      # symlinks the skill so edits apply on the next turn
+./scripts/setup.sh --dev      # symlinks the skill, installs the pre-commit hook
 ./scripts/setup.sh --check    # health-check every layer, change nothing
 bash -n scripts/*.sh          # syntax gate for script changes
+shellcheck -S style scripts/*.sh scripts/hooks/* skill/postflight/*.sh
 ```
+
+CI runs the same shell checks on Linux and macOS, because `setup.sh` has to
+parse under bash 5 and bash 3.2. It also scans the full history for secrets
+and stages the skill for ClawHub to prove nothing personal would ship.
 
 Leave `telegramTo` empty in `state/settings.json` and the skill runs in
 draft mode: drafts land in `state/drafts.md`, nothing is sent or posted.
@@ -45,5 +50,10 @@ the bot after editing, or your change silently isn't being tested.
 
 - Small and focused. Say which run or failure motivated the change.
 - Commit format: `<type>: <description>` (feat, fix, docs, chore).
-- Never commit anything from `state/`, any `*.local.md` file, or `.env`;
-  they're gitignored for a reason.
+- Never commit anything from `state/`, any `*.local.md` file, or `.env`. They
+  hold credentials, a Telegram user id, and someone's own posts. They are
+  gitignored, and `./scripts/install-hooks.sh` adds a pre-commit hook that
+  blocks them even from a `git add -f`.
+- Adding a file under `skill/postflight/`? Add its name to
+  `scripts/clawhub-manifest.txt` in the same commit. That file is the reviewed
+  list of what may be published to ClawHub; anything else fails the build.

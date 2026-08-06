@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Refuse to commit anything that must never leave this machine.
+#
+# CI scans for secrets too, but CI runs after a push, and a token that reached
+# GitHub is burned whether or not the build goes red. This hook is the only
+# check that runs while the damage is still undoable.
+#
+# Installed by scripts/install-hooks.sh (and by setup.sh --dev). Bypassing it
+# with --no-verify is possible and occasionally right; doing it for one of the
+# paths below never is.
+set -euo pipefail
+
+die() { printf '\033[31mpre-commit:\033[0m %s\n' "$1" >&2; exit 1; }
+
+staged="$(git diff --cached --name-only --diff-filter=ACMR)"
+[ -n "$staged" ] || exit 0
+
+# These are gitignored, so reaching this hook means someone typed `git add -f`
+# or the ignore rule regressed. Both are worth stopping for.
+blocked="$(printf '%s\n' "$staged" | grep -E \
+  '(^|/)\.env($|\.)|(^|/)skill/postflight/state/|\.local\.md$|(^|/)skill/postflight/settings\.json$' || true)"
+
+if [ -n "$blocked" ]; then
+  printf '\033[31mpre-commit:\033[0m these paths must never be committed:\n' >&2
+  printf '%s\n' "$blocked" | sed 's/^/  /' >&2
+  printf '\nThey hold credentials, your Telegram user id, or your own posts.\n' >&2
+  printf 'Unstage them with: git restore --staged <path>\n' >&2
+  exit 1
+fi
+
+# The manifest and the skill folder have to move together, or the next publish
+# fails in CI instead of here.
+if printf '%s\n' "$staged" | grep -q '^skill/postflight/'; then
+  manifest_root="$(git rev-parse --show-toplevel)/scripts/clawhub-manifest.txt"
+  if [ -f "$manifest_root" ]; then
+    allowed="$(grep -vE '^[[:space:]]*(#|$)' "$manifest_root" | LC_ALL=C sort)"
+    added="$(printf '%s\n' "$staged" | grep '^skill/postflight/' | sed 's|^skill/postflight/||')"
+    while IFS= read -r f; do
+      [ -n "$f" ] || continue
+      printf '%s\n' "$allowed" | grep -qxF "$f" \
+        || die "$f is not in scripts/clawhub-manifest.txt — add it there if it should ship to ClawHub"
+    done <<< "$added"
+  fi
+fi
+
+# Belt and braces: content-level scan of the staged diff, when available.
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --no-banner \
+    --config "$(git rev-parse --show-toplevel)/.gitleaks.toml" \
+    || die "gitleaks found a secret in the staged diff (value redacted above)"
+fi
+
+exit 0

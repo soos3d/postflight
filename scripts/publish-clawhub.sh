@@ -15,6 +15,7 @@ set -euo pipefail
 SLUG="postflight"
 NAME="Postflight"
 SKILL_PATH="skill/postflight"
+MANIFEST="scripts/clawhub-manifest.txt"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
@@ -50,6 +51,25 @@ while IFS= read -r f; do leaked="${leaked} ${f#"$STAGE"/}"; done < <(
   find "$STAGE" -name '*.local.md' -o -name '.env' -o -name 'settings.json'
 )
 [ -z "$leaked" ] || die "staged copy contains files that must never be published:${leaked}"
+
+# The checks above only catch personal files whose names were predicted. The
+# manifest catches the rest: it is the reviewed list of what may ship, so a
+# file nobody meant to publish shows up here as a diff instead of on ClawHub.
+[ -f "$MANIFEST" ] || die "missing $MANIFEST — refusing to publish an unreviewed file list"
+
+staged_files="$(cd "$STAGE" && find . -type f | sed 's|^\./||' | LC_ALL=C sort)"
+allowed_files="$(grep -vE '^[[:space:]]*(#|$)' "$MANIFEST" | LC_ALL=C sort)"
+
+if [ "$staged_files" != "$allowed_files" ]; then
+  printf 'error: the staged copy does not match %s\n\n' "$MANIFEST" >&2
+  # diff exits 1 on a difference, which is the expected case here; without the
+  # `|| true` errexit would kill the script before it prints what to do next.
+  { diff <(printf '%s\n' "$allowed_files") <(printf '%s\n' "$staged_files") \
+    | sed 's|^< |  listed but not staged: |; s|^> |  NOT IN MANIFEST: |' || true; } >&2
+  printf '\nAdd intended files to %s in the same commit. Anything you did not\n' "$MANIFEST" >&2
+  printf 'mean to publish must not be committed under %s.\n' "$SKILL_PATH" >&2
+  exit 1
+fi
 
 if grep -rIl --exclude-dir=.git -E '[0-9]{8,}' "$STAGE" >/dev/null 2>&1; then
   printf 'note: the staged copy contains long digit runs. Check them before publishing:\n' >&2
