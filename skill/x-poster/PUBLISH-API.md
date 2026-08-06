@@ -62,7 +62,7 @@ literal string "/2/tweets". The HTTP method is only ever set with `-X`.
 
    Any output means the photo never went through the ingest script:
    stop, do not upload, and tell the user to re-ingest it with
-   `scripts/ingest-photo.sh`.
+   `ingest-photo.sh` (in this folder; `scripts/` in the checkout).
 
    ```sh
    xurl media upload "$MEDIA_PATH" > "${TMPDIR:-/tmp}/upload.out"

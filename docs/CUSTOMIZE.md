@@ -62,6 +62,18 @@ photo has none) and enforces the never-same-day rule; a photo also rests
 60 days after being posted. Selection and caption rules live in
 CONTENT.md "Photo library".
 
+**Or add photos from your phone**: send the photo to your bot with a
+one-line caption — the caption becomes the note, the agent suggests
+tags from looking at the shot, and it runs the same ingest script (same
+metadata strip, same manifest). One habit matters: **send it as a file**
+(attach → File), not as a photo — Telegram recompresses photo-sends and
+strips the taken date the library needs; the bot will ask you to resend
+when that happens. Caption lines like `tags: springs kayak`,
+`location: ...`, or `taken: 2026-06-14` override what's detected.
+iPhone tip: file-sends of HEIC photos get refused with a conversion
+hint — Settings → Camera → Formats → "Most Compatible" makes the camera
+shoot JPEG and the whole flow friction-free.
+
 Two rules the script can't enforce: keep home-adjacent spots out of the
 library entirely, and post after leaving a location, never from it. The
 library lives under `state/`, so it is never committed; a plain `cp -R`
