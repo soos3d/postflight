@@ -181,6 +181,12 @@ cheap and safe:
   this skill.
 - The single-post response carries the author's username at
   `.includes.users[0].username` and the text at `.data.text`.
+- The batched response is partial-tolerant: ids the account has since
+  deleted come back 200 with a resource-not-found entry under `.errors`
+  while `.data` holds the rest, so `.data` can be shorter than the id
+  list and in a different order. Match on `.data[].id`, and read
+  `.errors[].value` for the ids that produced nothing
+  (CONTENT.md "Metrics readback" records those too).
 - `non_public_metrics` (profile clicks, link clicks) works only on your
   own recent tweets and may be gated by API tier: an error naming that
   field means retry once with `public_metrics` alone, not an auth

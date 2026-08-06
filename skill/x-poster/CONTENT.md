@@ -297,13 +297,22 @@ fetch entirely when there is nothing new to measure.
    `non_public_metrics`; if the response is an error naming
    `non_public_metrics`, retry once with `public_metrics` alone and note
    in the digest that profile clicks were unavailable.
+   A batched request answers 200 with **both** `data` and `errors`: an id
+   the account deleted comes back under `errors` as a resource-not-found,
+   and `data` is short by that many entries. That is a successful
+   request, not a failure — never retry it, and never assume `data[i]`
+   lines up with the ids you sent. Match on `.data[].id`.
 3. **Record.** Append to `state/metrics.jsonl`, one line per post:
    `{"post_id": "...", "fetched_at": "<ISO>", "age_days": <whole days
    between the post-log date and fetched_at>, "pillar": "...",
    "format": "...", "impressions": n, "likes": n, "replies": n,
    "reposts": n, "quotes": n, "bookmarks": n, "profile_clicks": n,
    "link_clicks": n}` — `pillar`/`format` copied from the post-log line,
-   fields the API did not return omitted. Then one account line per
+   fields the API did not return omitted. For an id that came back under
+   `errors`, write `{"post_id": "...", "fetched_at": "<ISO>",
+   "unavailable": true}` and nothing else: step 1 keys on `post_id`, so
+   without that line a deleted post is re-requested in every future
+   batch. Then one account line per
    readback: `{"type": "account", "fetched_at": "<ISO>", "followers": n}`.
    Never rewrite existing lines; a post is fetched once, in the first
    readback that sees it.
@@ -315,10 +324,14 @@ fetch entirely when there is nothing new to measure.
 5. **Digest.** Send to `telegramTo` (in draft mode: include it in the
    turn report instead): posts measured, best/worst with topic and
    impressions, median impressions by pillar and by format across all
-   post lines of `metrics.jsonl` (`type: account` lines are not posts),
+   post lines of `metrics.jsonl` (`type: account` lines are not posts,
+   and neither are `unavailable` lines — they carry no numbers),
    and follower count with the delta since the previous account line.
    Numbers only from fetched data — a pillar with fewer than 3 measured
-   posts gets its count shown, not a median.
+   posts gets its count shown, not a median. Group by whatever `format`
+   values the lines carry, including the historical `link-card` (see
+   SKILL.md): link-card versus media+reply is the comparison this
+   readback exists to make.
 
 Pillar weights stay a human decision: the digest informs, the user edits
 the grid. Never adjust weights, the grid, or any config from metrics.
