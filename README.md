@@ -64,6 +64,15 @@ build-in-public (3). Personal pillars — a hobby backed by a photo
 library, a craft you teach — are per-install and live in one untracked
 file; see [docs/CUSTOMIZE.md](docs/CUSTOMIZE.md).
 
+Two things happen outside the daily loop. A weekly maintenance turn
+refreshes the content backlog and reads last week's posts' metrics into
+a Telegram digest (median impressions by pillar and format, follower
+delta), so adjusting the schedule is an informed edit rather than a
+guess. And you can forward someone's post link to the bot to get two or
+three reply options drafted in your voice — each has to carry code, a
+gotcha, or a real number, and sending them stays manual, from your own
+client.
+
 ## Quickstart
 
 Have three things ready:
