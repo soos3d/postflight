@@ -153,6 +153,18 @@ approval gate.
 What's coming next (thread support, a second network, per-slot model
 overrides) lives in [ROADMAP.md](ROADMAP.md).
 
+Questions, setups worth showing, and drafts that came out badly enough to
+be interesting go in
+[Discussions](https://github.com/soos3d/postflight/discussions). Bugs go in
+issues.
+
+## Support
+
+The contribution I want is a voice rule that survived a real run. Second
+best is telling me what broke on your platform. If you'd rather put money
+behind it, [sponsorship](https://github.com/sponsors/soos3d) is there, and
+it buys no influence over the roadmap.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
