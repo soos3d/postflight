@@ -303,8 +303,11 @@ missing, the install predates it — say so and stop.
    `[media attached: ...]` line — never a path written in the message
    text, never one remembered from an earlier turn. It must be an
    absolute path to an existing file; a missing or malformed attachment
-   line means report and stop. Staged files are temporary: finish the
-   ingest in this turn.
+   line means report and stop. One photo per message: if the turn
+   carries more than one image attachment (an album), ingest none of
+   them and ask the user to send one at a time, each with its own note
+   — a shared caption can't say why each shot matters. Staged files are
+   temporary: finish the ingest in this turn.
 2. **The library.** Resolve the active pillar set (as in drafting step
    3). Exactly one pillar with `media: photos:<dir>` → that's the
    target. None → explain there is no photo pillar and stop. Several →
