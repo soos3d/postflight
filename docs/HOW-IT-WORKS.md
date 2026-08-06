@@ -33,8 +33,13 @@ the turn actually needs them.
 
 Each cron slot runs the same five steps.
 
-**1. Check the budget.** Three posts a day maximum, nothing resembling the
-last ten topics. Look up the slot's pillar in the weekly grid.
+**1. Sweep, then check the budget.** Pending drafts older than 24h move to
+`state/skipped/`, which is itself swept at 30 days; generated media older than
+a week that no pending draft references is deleted, and photo libraries are
+never touched. Then the budget: three posts a day maximum, nothing resembling
+the last ten topics. Look up the slot's pillar in the weekly grid. Every
+question asked of the post log is answered from a `tail` of it rather than the
+whole file, so a turn costs the same on day 400 as it does on day 4.
 
 **2. Gather real material.** Commits, releases, and READMEs from your
 public repos via the `gh` CLI; AI stories from the Hacker News API; your
@@ -62,11 +67,14 @@ a day that's 21 weekly slots. The shipped defaults:
 
 | Pillar | Slots | Format |
 |---|---|---|
-| repo demos | 8 | Media-first, link in the reply |
-| insights | 10 | Pure text |
-| build-in-public | 3 | Mixed |
+| `builds` | 8 | Own-repo demos: media-first, link in the reply |
+| `insights` | 10 | Pure text, no links |
+| `build-in-public` | 3 | This pipeline itself: media-first, link in the reply |
 
-Repo demos put the link in a reply because link-card posts are the format X
+Those names are load-bearing: the grid, the post log, and any overlay in
+`pillars.local.md` key on them.
+
+Builds posts put the link in a reply because link-card posts are the format X
 suppresses hardest.
 
 Personal pillars — a hobby backed by a photo library, a craft you teach —

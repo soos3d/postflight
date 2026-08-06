@@ -1,8 +1,10 @@
 # Roadmap
 
 What's planned for Postflight, in priority order. Items move up or down based
-on real use, not votes — but if one of these matters to you, say so in an
-issue, and see [CONTRIBUTING.md](CONTRIBUTING.md) if you want to build it.
+on real use, not votes — but if one of these matters to you, say so in
+[Discussions](https://github.com/soos3d/postflight/discussions) (issues are for
+things that are broken), and see [CONTRIBUTING.md](CONTRIBUTING.md) if you want
+to build it.
 The items open for contribution are tagged
 [good first issue](https://github.com/soos3d/postflight/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 The one rule that never moves: every post is approved by a human before it

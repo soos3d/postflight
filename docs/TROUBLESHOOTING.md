@@ -238,5 +238,8 @@ openclaw models auth login --provider openai            # ChatGPT/Codex
 
 ## Still stuck
 
-Open an issue with the output of `./scripts/setup.sh --check`. It reports
-every layer and includes no secrets.
+If something is broken, open an
+[issue](https://github.com/soos3d/postflight/issues) with the output of
+`./scripts/setup.sh --check` — it reports every layer and includes no secrets.
+If it's a question rather than a bug, ask in
+[Discussions](https://github.com/soos3d/postflight/discussions).

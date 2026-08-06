@@ -94,7 +94,7 @@ conflicts with your customization. Full walkthrough in
 
 | What | Where | Why |
 |---|---|---|
-| Your topics and weekly schedule | `pillars.local.md` | Without it, a generic repo-demos + insights schedule runs |
+| Your topics and weekly schedule | `pillars.local.md` | Without it, the default builds / insights / build-in-public schedule runs |
 | 3 to 5 of your own tweets | `voice-examples.local.md` | They outrank every other style rule. Don't skip this one |
 | Accounts whose register to study | `styleAccounts` in `state/settings.json` | Patterns only, never named in posts |
 
