@@ -122,7 +122,10 @@ Decide which mode this turn is, in order:
    Validate size caps before accepting a file. If the ladder bottoms out,
    the draft becomes `text+reply` and the pending file records why.
 6. **Write the draft.** Follow VOICE.md exactly. Write 3 candidate drafts
-   internally, keep the best one. Aim for 200-270 weighted characters; 280
+   internally, and keep the one that sounds most like the account's voice
+   anchor (`voice-examples.local.md` when it exists, VOICE.md's register
+   examples otherwise) — NOT the most polished one. Polish is how slop
+   wins the pick. Aim for 200-270 weighted characters; 280
    is a hard cap, not a target. A short draft is fine — never pad toward
    the cap. For a `link: reply` pillar the draft is two texts: the
    **body** (the demo — no URL, no link-pointer phrasing) and the **reply**

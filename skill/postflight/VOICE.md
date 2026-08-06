@@ -48,6 +48,15 @@ recognizable phrasings, and never name them in output.
   supercharge, elevate, unleash, harness, ever-evolving, game-changing.
 - Em dashes. Use a period or a comma.
 - Claims you cannot source. No "studies show", no invented benchmarks.
+- The reaction kicker: closing on your own awe as the punchline. "I do
+  this for a living and I still...", "never gets old", "gets me every
+  time", "still can't believe it". Say what you saw and stop; the reader
+  supplies the feeling.
+- Stacked scene captions: two or more verbless noun-phrase fragments that
+  describe scenery ("Sunset over the ramp. Two ships in tight
+  formation.") — trailer-voiceover writing. Fragments that pile up toward
+  a take are fine; fragments that paint a postcard are not. At least one
+  sentence needs a subject doing something.
 
 ## Shapes that work
 
@@ -75,13 +84,24 @@ it like a text to a friend:
   "recharge", "bucket list".
 - No links, no hashtags. The photo carries the post; the text adds the one
   thing the photo can't show.
+- A text to a friend has a verb and starts mid-thought: "they ran a
+  three-ship formation right over the park" beats "Three ships over the
+  park. Perfect formation." If the post's punchline is your own reaction,
+  cut the reaction and keep the sight.
 - Post AFTER leaving a location, never from it.
 
 ## Final check before submitting a draft
 
-Read the draft aloud in your head as if a colleague sent it in Slack. If it
-sounds like a LinkedIn post, a press release, or an AI wrote it, rewrite it.
-If it could have been written by someone who never ran the code, rewrite it.
+Read the draft aloud in your head as if a colleague sent it in Slack, then
+check it against these by name — "sounds fine" is not a check:
+
+- Does it end on your own reaction or awe? Cut the reaction, keep the fact.
+- Are there two or more verbless fragments in a row? Give one a verb.
+- Do the beats land with the same length and polish (setup, detail,
+  punchline)? Rough one up or drop one.
+- Could someone who never ran the code or saw the thing have written it?
+  Add the detail only you would know.
+- Would you actually type this with your thumbs? If not, rewrite it.
 
 Length trims are mechanical, not a rewrite trigger: after cutting a clause to
 fit the character cap, re-run only the count, not this checklist.
