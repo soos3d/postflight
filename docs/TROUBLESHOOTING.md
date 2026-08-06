@@ -20,7 +20,7 @@ copy until you reset it.
 
 If the edit was to a tracked file in your git checkout, that alone isn't
 enough — a default install *copies* the skill to
-`~/.openclaw/workspace/skills/x-poster/`. Rerun `./scripts/install.sh`
+`~/.openclaw/workspace/skills/postflight/`. Rerun `./scripts/install.sh`
 first, then send `/new`. To skip this loop entirely, install once with
 `./scripts/install.sh --dev`, which symlinks the checkout instead.
 
@@ -38,7 +38,7 @@ write access. Create a project, create the app inside it, then redo the
 The OAuth token predates the `media.write` scope. Rerun the consent flow:
 
 ```sh
-xurl auth oauth2 --app x-poster
+xurl auth oauth2 --app postflight
 ```
 
 ## A cron job never fires
@@ -118,7 +118,7 @@ starts the rotation fresh.
 the safe default: the skill writes drafts to disk, sends nothing, posts
 nothing. Set your Telegram user id to go live.
 
-## `openclaw skills list` doesn't show x-poster as ready
+## `openclaw skills list` doesn't show postflight as ready
 
 On a `--dev` install, the symlink target must be trusted via
 `skills.load.allowSymlinkTargets` in `~/.openclaw/openclaw.json`. The
@@ -200,7 +200,7 @@ The agent stops and alerts you. By design it never attempts a login and
 never touches credentials, so reauthorize by hand:
 
 ```sh
-xurl auth oauth2 --app x-poster        # X
+xurl auth oauth2 --app postflight        # X
 openclaw models auth setup-token --provider anthropic   # Claude
 openclaw models auth login --provider openai            # ChatGPT/Codex
 ```

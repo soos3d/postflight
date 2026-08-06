@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ingest-photo.sh — add a photo to an x-poster photo library.
+# ingest-photo.sh — add a photo to a Postflight photo library.
 #
 # Strips ALL metadata (GPS included) from a copy of the photo, files it
 # in the library directory, and appends the manifest entry that makes it
@@ -30,7 +30,7 @@ ok()  { printf '  ok: %s\n' "$*"; }
 # this machine has one, else the skill folder this script sits in (covers
 # --dev symlink installs, where both paths are the same tree).
 default_dir() {
-  local installed="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}/skills/x-poster"
+  local installed="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}/skills/postflight"
   local here
   here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   if [[ -d "$installed" ]]; then
@@ -163,7 +163,7 @@ done
 
 manifest="$dir/manifest.yaml"
 if [[ ! -f "$manifest" ]]; then
-  printf '# x-poster photo library — one entry per postable photo.\n' > "$manifest"
+  printf '# postflight photo library — one entry per postable photo.\n' > "$manifest"
   printf '# Maintained by ingest-photo.sh and your editor; the skill only reads it.\n' >> "$manifest"
 fi
 {

@@ -27,14 +27,14 @@ Six steps:
 Pick one:
 
 ```sh
-./scripts/install.sh          # copies the skill into <workspace>/skills/x-poster
+./scripts/install.sh          # copies the skill into <workspace>/skills/postflight
 ./scripts/install.sh --dev    # symlinks it, for live editing
 ```
 
 Verify:
 
 ```sh
-openclaw skills list          # x-poster should show ✓ ready
+openclaw skills list          # postflight should show ✓ ready
 ```
 
 > **Using `--dev`?** The symlink target must be trusted via
@@ -131,9 +131,9 @@ under the same naming scheme; on Linux use `sha256sum -c -` instead of
 ### 3.4 Authorize
 
 ```sh
-xurl auth apps add x-poster --client-id YOUR_CLIENT_ID --client-secret YOUR_CLIENT_SECRET
-xurl auth oauth2 --app x-poster
-xurl auth default x-poster    # bare xurl commands now use this app
+xurl auth apps add postflight --client-id YOUR_CLIENT_ID --client-secret YOUR_CLIENT_SECRET
+xurl auth oauth2 --app postflight
+xurl auth default postflight    # bare xurl commands now use this app
 xurl /2/users/me              # prints your handle when everything works
 ```
 
@@ -197,7 +197,7 @@ openclaw gateway restart
 
 ### 4.3 Set the approval gate
 
-Put the same user id in `skill/x-poster/state/settings.json` as
+Put the same user id in `skill/postflight/state/settings.json` as
 `telegramTo`.
 
 That field is the approval gate: only that sender can ship a draft. While
@@ -225,14 +225,14 @@ works.
 Leave `telegramTo` empty and run one turn:
 
 ```sh
-openclaw agent --local --agent main -m "x-poster drafting turn: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars)."
+openclaw agent --local --agent main -m "postflight drafting turn: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars)."
 ```
 
 Read the result in `state/drafts.md` against `VOICE.md`.
 
 ### 6.2 Telegram round trip
 
-Set `telegramTo`, message your bot `x-poster: draft a post`, and reply
+Set `telegramTo`, message your bot `postflight: draft a post`, and reply
 `skip`. The draft should land in `state/skipped/` and nowhere else.
 
 Then run one full `ship` and confirm the permalink.

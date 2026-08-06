@@ -1,4 +1,6 @@
-# x-poster (Twitter poster via OpenClaw)
+# Postflight
+
+Drafts on schedule. Publishes on your word.
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -12,6 +14,10 @@ kind of boring discipline a personal agent is good at. What I didn't want
 was a bot posting to my real account unsupervised, so the contract is
 fixed: the agent drafts, you approve, it ships. There is no autonomous
 mode.
+
+This skill was called x-poster until v1.0.0. Old links still resolve.
+Upgrading an existing install takes one extra command, in [Upgrading from
+x-poster](docs/DEPLOY-VPS.md#upgrading-from-x-poster).
 
 <!-- TODO(screenshot): the page's strongest asset goes here. Save the
      shot as docs/assets/approval-flow.png and replace this comment with:
@@ -41,7 +47,7 @@ mode.
 ### 2. Run the wizard
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Soos3D/x-poster/main/scripts/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/soos3d/postflight/main/scripts/setup.sh | bash
 ```
 
 Prefer not to pipe curl into bash? Clone the repo and run
@@ -57,7 +63,7 @@ a failure is safe.
 Message your bot:
 
 ```
-x-poster: draft a post
+postflight: draft a post
 ```
 
 Reply `skip`. You'll see the whole loop run without posting anything.
@@ -91,7 +97,7 @@ conflicts with your customization. Full walkthrough in
 | 3 to 5 of your own tweets | `voice-examples.local.md` | They outrank every other style rule. Don't skip this one |
 | Accounts whose register to study | `styleAccounts` in `state/settings.json` | Patterns only, never named in posts |
 
-These live in `~/.openclaw/workspace/skills/x-poster/`, where the default
+These live in `~/.openclaw/workspace/skills/postflight/`, where the default
 install copies the skill. `install.sh` never touches `state/` or
 `*.local.md`.
 

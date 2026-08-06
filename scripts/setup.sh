@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# One-command setup for the x-poster OpenClaw skill.
+# One-command setup for the Postflight OpenClaw skill.
 #
-#   curl -fsSL https://raw.githubusercontent.com/Soos3D/x-poster/main/scripts/setup.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/soos3d/postflight/main/scripts/setup.sh | bash
 #   ./scripts/setup.sh [--check] [--dev]
 #
 # Every step probes real state first and skips what's already done, so the
@@ -13,10 +13,10 @@
 # create the Telegram bot (@BotFather). It pauses and walks you through both.
 set -Eeuo pipefail
 
-REPO_URL="${X_POSTER_REPO:-https://github.com/Soos3D/x-poster}"
-REPO_DIR="${X_POSTER_DIR:-$HOME/x-poster}"
+REPO_URL="${POSTFLIGHT_REPO:-https://github.com/soos3d/postflight}"
+REPO_DIR="${POSTFLIGHT_DIR:-$HOME/postflight}"
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
-XURL_APP="x-poster"
+XURL_APP="postflight"
 XURL_VERSION="${XURL_VERSION:-1.3.1}"
 MODEL_ANTHROPIC="anthropic/claude-fable-5"
 # OpenAI ids, best first. gpt-5.6-sol is the Codex-subscription tier but only
@@ -94,25 +94,25 @@ ensure_repo() {
   if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   fi
-  if [[ -n "$script_dir" && -f "$script_dir/../skill/x-poster/SKILL.md" ]]; then
+  if [[ -n "$script_dir" && -f "$script_dir/../skill/postflight/SKILL.md" ]]; then
     REPO_DIR="$(cd "$script_dir/.." && pwd)"
     return
   fi
-  [[ -z "${X_POSTER_REEXEC:-}" ]] || die "re-exec loop: $REPO_DIR is not a valid x-poster checkout"
+  [[ -z "${POSTFLIGHT_REEXEC:-}" ]] || die "re-exec loop: $REPO_DIR is not a valid postflight checkout"
   # curl | bash: fetch the repo, then hand off to the checked-out script.
   command -v git >/dev/null || die "git is required to fetch $REPO_URL"
   if [[ -d "$REPO_DIR/.git" ]]; then
     local origin
     origin="$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null || true)"
     [[ "$origin" == "$REPO_URL" || "$origin" == "$REPO_URL.git" ]] \
-      || die "$REPO_DIR points at ${origin:-no remote}, not $REPO_URL — remove it or set X_POSTER_DIR"
+      || die "$REPO_DIR points at ${origin:-no remote}, not $REPO_URL — remove it or set POSTFLIGHT_DIR"
     [[ $CHECK_ONLY -eq 1 ]] || git -C "$REPO_DIR" pull --ff-only \
       || die "could not update $REPO_DIR (dirty or diverged checkout?)"
   else
     [[ $CHECK_ONLY -eq 1 ]] && die "no checkout at $REPO_DIR — clone it first, --check changes nothing"
     git clone "$REPO_URL" "$REPO_DIR"
   fi
-  X_POSTER_REEXEC=1 exec bash "$REPO_DIR/scripts/setup.sh" "$@"
+  POSTFLIGHT_REEXEC=1 exec bash "$REPO_DIR/scripts/setup.sh" "$@"
 }
 
 # ---------- step 1: dependencies ----------
@@ -169,8 +169,8 @@ step_openclaw() {
 # ---------- step 2: skill install ----------
 
 skill_dir() {
-  if [[ $DEV_MODE -eq 1 ]]; then printf '%s' "$REPO_DIR/skill/x-poster";
-  else printf '%s' "$WORKSPACE/skills/x-poster"; fi
+  if [[ $DEV_MODE -eq 1 ]]; then printf '%s' "$REPO_DIR/skill/postflight";
+  else printf '%s' "$WORKSPACE/skills/postflight"; fi
 }
 
 symlink_trusted() {
@@ -184,12 +184,12 @@ symlink_trusted() {
 
 dev_install_ok() {
   local dest="$1"
-  [[ -L "$dest" && "$(readlink "$dest")" == "$REPO_DIR/skill/x-poster" ]] && symlink_trusted
+  [[ -L "$dest" && "$(readlink "$dest")" == "$REPO_DIR/skill/postflight" ]] && symlink_trusted
 }
 
 step_skill() {
   step "Skill install"
-  local dest="$WORKSPACE/skills/x-poster"
+  local dest="$WORKSPACE/skills/postflight"
   if [[ $DEV_MODE -eq 1 ]]; then
     if dev_install_ok "$dest"; then ok "skill symlinked and trusted at $dest"; return 0; fi
     if [[ $CHECK_ONLY -eq 1 ]]; then todo "dev install missing, wrong target, or symlink not trusted"; return 0; fi
@@ -436,15 +436,15 @@ step_telegram() {
 
 # ---------- step 7: cron ----------
 
-CRON_NAMES=(x-poster-own-work x-poster-ai-news x-poster-aviation x-poster-backlog)
+CRON_NAMES=(postflight-own-work postflight-ai-news postflight-aviation postflight-backlog)
 EXPR_OWN="" EXPR_NEWS="" EXPR_AVIATION=""
 
 cron_expr_for() {
   case "$1" in
-    x-poster-own-work) printf '%s' "$EXPR_OWN" ;;
-    x-poster-ai-news)  printf '%s' "$EXPR_NEWS" ;;
-    x-poster-aviation) printf '%s' "$EXPR_AVIATION" ;;
-    x-poster-backlog)  printf '0 8 * * 1' ;;
+    postflight-own-work) printf '%s' "$EXPR_OWN" ;;
+    postflight-ai-news)  printf '%s' "$EXPR_NEWS" ;;
+    postflight-aviation) printf '%s' "$EXPR_AVIATION" ;;
+    postflight-backlog)  printf '0 8 * * 1' ;;
   esac
 }
 
@@ -453,10 +453,10 @@ cron_expr_for() {
 # never require touching cron again.
 cron_msg_for() {
   case "$1" in
-    x-poster-own-work) printf 'Run the x-poster skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
-    x-poster-ai-news)  printf 'Run the x-poster skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
-    x-poster-aviation) printf 'Run the x-poster skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
-    x-poster-backlog)  printf 'x-poster maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections, then run the weekly metrics readback per CONTENT.md "Metrics readback". Do not draft or publish.' ;;
+    postflight-own-work) printf 'Run the postflight skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
+    postflight-ai-news)  printf 'Run the postflight skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
+    postflight-aviation) printf 'Run the postflight skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval.' ;;
+    postflight-backlog)  printf 'postflight maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections, then run the weekly metrics readback per CONTENT.md "Metrics readback". Do not draft or publish.' ;;
   esac
 }
 
@@ -481,6 +481,51 @@ cron_job_json() {
   openclaw cron list --json 2>/dev/null | jq -c --arg n "$1" '.jobs[]? | select(.name==$n)' 2>/dev/null
 }
 
+# Field readers for one job object. Kept together so the name-rename and the
+# message-drift migrations can never disagree about where a field lives.
+cron_field_msg() { jq -r '[.payload.message?, .message?, .msg?, .prompt?] | map(select(type=="string")) | first // empty' <<<"$1"; }
+cron_field_expr() { jq -r '[.schedule.expr?, .expr?, .schedule?, .cron?] | map(select(type=="string")) | first // empty' <<<"$1"; }
+cron_field_tz() { jq -r '[.schedule.tz?, .tz?, .timezone?] | map(select(type=="string")) | first // empty' <<<"$1"; }
+
+# Jobs registered before the x-poster -> postflight rename carry the old name,
+# and cron_missing keys on the name — without this, a rerun would register a
+# second full set and every slot would draft twice. Recreates each job under
+# the new name with its schedule and Telegram route intact, then removes the
+# old one. Removal comes first on purpose: a half-failed rename that leaves no
+# job is loud and recoverable, one that leaves two double-posts for days.
+# The doctor heartbeat keeps whatever message it already had; the slot jobs
+# take the current canonical message, which also mentions the new skill name.
+cron_migrate_names() {
+  local name legacy job expr tz to jid want
+  to="$(telegram_to)"
+  for name in "${CRON_NAMES[@]}" postflight-doctor; do
+    legacy="x-poster-${name#postflight-}"
+    [[ -z "$(cron_job_json "$name")" ]] || continue
+    job="$(cron_job_json "$legacy")"
+    [[ -n "$job" ]] || continue
+    if ! interactive; then
+      todo "cron $legacy still has its pre-rename name — rerun setup.sh (no --check) to migrate"
+      continue
+    fi
+    want="$(cron_msg_for "$name")"
+    [[ -n "$want" ]] || want="$(cron_field_msg "$job")"
+    expr="$(cron_field_expr "$job")"
+    tz="$(cron_field_tz "$job")"
+    jid="$(jq -r '.id // empty' <<<"$job")"
+    if [[ -z "$expr" || -z "$tz" || -z "$to" || -z "$jid" || -z "$want" ]]; then
+      todo "cron $legacy should be renamed to $name but could not be read in full — rename it by hand (openclaw cron rm <id>, then the command in docs/SETUP-MANUAL.md)"
+      continue
+    fi
+    openclaw cron rm "$jid" >/dev/null
+    openclaw cron create "$expr" "$want" \
+      --name "$name" --session isolated --tz "$tz" \
+      --channel telegram --to "$to" >/dev/null \
+      || die "removed cron $legacy but could not create $name. Recreate it with:
+  openclaw cron create \"$expr\" \"$want\" --name $name --session isolated --tz $tz --channel telegram --to $to"
+    ok "cron $legacy renamed to $name ($expr @ $tz)"
+  done
+}
+
 # Jobs created by pre-pillar versions carry the old slot messages. Creating
 # jobs is idempotent by name, so a rerun never updates them — this detects
 # the drift and recreates the job in place, preserving its schedule and
@@ -492,7 +537,7 @@ cron_migrate_messages() {
   for name in "${CRON_NAMES[@]}"; do
     job="$(cron_job_json "$name")"
     [[ -n "$job" ]] || continue
-    cur="$(jq -r '[.payload.message?, .message?, .msg?, .prompt?] | map(select(type=="string")) | first // empty' <<<"$job")"
+    cur="$(cron_field_msg "$job")"
     [[ -n "$cur" ]] || continue
     want="$(cron_msg_for "$name")"
     [[ "$cur" == "$want" ]] && continue
@@ -500,8 +545,8 @@ cron_migrate_messages() {
       todo "cron $name still has an outdated message — rerun setup.sh (no --check) to migrate"
       continue
     fi
-    expr="$(jq -r '[.schedule.expr?, .expr?, .schedule?, .cron?] | map(select(type=="string")) | first // empty' <<<"$job")"
-    tz="$(jq -r '[.schedule.tz?, .tz?, .timezone?] | map(select(type=="string")) | first // empty' <<<"$job")"
+    expr="$(cron_field_expr "$job")"
+    tz="$(cron_field_tz "$job")"
     jid="$(jq -r '.id // empty' <<<"$job")"
     if [[ -z "$expr" || -z "$tz" || -z "$to" || -z "$jid" ]]; then
       todo "cron $name needs the new pillar-slot message but its schedule could not be read — recreate it by hand (openclaw cron rm, then the command in docs/SETUP-MANUAL.md)"
@@ -518,6 +563,7 @@ cron_migrate_messages() {
 step_cron() {
   step "Cron schedule"
   local missing
+  cron_migrate_names
   missing="$(cron_missing)"
   if [[ -z "$missing" ]]; then
     ok "all four jobs registered"
@@ -602,7 +648,7 @@ summary() {
   printf '  %s\n' ${RESULTS[@]+"${RESULTS[@]}"}
   cat <<'EOF'
 
-Next: message your bot "x-poster: draft a post" and reply ship or skip.
+Next: message your bot "postflight: draft a post" and reply ship or skip.
 Rerun this script anytime — it only touches what's missing.
 EOF
 }

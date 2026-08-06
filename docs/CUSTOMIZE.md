@@ -14,7 +14,7 @@ overwrites it.
 ## Where these files live
 
 The default install **copies** the skill into
-`~/.openclaw/workspace/skills/x-poster/`. That copy is what the agent
+`~/.openclaw/workspace/skills/postflight/`. That copy is what the agent
 reads, so that's where these files belong.
 
 `install.sh` never touches `state/` or any `*.local.md` file there. But
@@ -31,7 +31,7 @@ The skill ships a generic schedule: repo demos plus insights. To add your
 own topics:
 
 ```sh
-cd ~/.openclaw/workspace/skills/x-poster   # or the checkout, with --dev
+cd ~/.openclaw/workspace/skills/postflight   # or the checkout, with --dev
 cp pillars.example.md pillars.local.md
 ```
 

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Postflight — social preview card</title>
+<!--
+  GitHub social preview card, 1280x640.
+
+  Regenerate social-card.png from this file:
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+      --headless --disable-gpu --hide-scrollbars \
+      --force-device-scale-factor=1 --window-size=1280,640 \
+      --screenshot=docs/assets/social-card.png \
+      "file://$PWD/docs/assets/social-card.html"
+
+  The card fills the viewport exactly, so the shot needs no cropping. Upload
+  the PNG under Settings > General > Social preview.
+
+  Self-contained on purpose: no webfonts, no external assets, so the render
+  is identical on any machine.
+-->
+<style>
+  :root {
+    --navy: #0a0f1c;
+    --navy-raised: #131c2e;
+    --amber: #f0a83c;
+    --ink: #f2f5fa;
+    --muted: #7d8aa3;
+    --rule: #22304a;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #05080f;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  .card {
+    position: relative;
+    width: 1280px;
+    height: 640px;
+    box-sizing: border-box;
+    padding: 76px 96px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 460px at 78% 12%, rgba(240, 168, 60, 0.10), transparent 62%),
+      var(--navy);
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+  }
+
+  /* Horizon line: the one visual flourish, and it stays abstract rather than
+     reaching for a second aviation metaphor. */
+  .card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 138px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rule) 22%, var(--rule) 78%, transparent);
+  }
+
+  .top {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 64px;
+    padding-bottom: 62px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 104px;
+    line-height: 1;
+    font-weight: 640;
+    letter-spacing: -3.5px;
+  }
+
+  .tagline {
+    margin: 28px 0 0;
+    font-size: 36px;
+    line-height: 1.34;
+    font-weight: 500;
+    letter-spacing: -0.4px;
+    color: var(--amber);
+  }
+
+  /* A two-message Telegram exchange: the draft arrives, you answer it. The
+     whole product is this thread, so the card shows the thread. */
+  .thread {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+    flex-shrink: 0;
+    padding-top: 12px;
+  }
+
+  .bubble {
+    max-width: 348px;
+    padding: 18px 22px;
+    border-radius: 20px;
+    font-size: 21px;
+    line-height: 1.45;
+  }
+
+  .bubble.incoming {
+    background: var(--navy-raised);
+    border: 1px solid var(--rule);
+    border-bottom-left-radius: 6px;
+    color: #c9d4e6;
+  }
+
+  .bubble.outgoing {
+    background: var(--amber);
+    border-bottom-right-radius: 6px;
+    color: #241603;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 26px;
+    font-weight: 600;
+    padding: 14px 30px;
+    letter-spacing: 0.5px;
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 22px;
+    letter-spacing: 0.2px;
+    color: var(--muted);
+  }
+
+  footer .sep { color: var(--rule); }
+  footer .repo { color: #a8b5cc; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="top">
+      <div>
+        <h1>Postflight</h1>
+        <p class="tagline">Drafts on schedule.<br>Publishes on your word.</p>
+      </div>
+      <div class="thread">
+        <div class="bubble incoming">Draft for slot 2. Shipped the readback fix: batched metrics now survive a deleted post.</div>
+        <div class="bubble outgoing">ship</div>
+      </div>
+    </div>
+    <footer>
+      <span>OpenClaw skill</span>
+      <span class="sep">·</span>
+      <span>MIT</span>
+      <span class="sep">·</span>
+      <span class="repo">github.com/soos3d/postflight</span>
+    </footer>
+  </div>
+</body>
+</html>

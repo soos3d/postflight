@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Installs the x-poster skill into an OpenClaw workspace and prints next steps.
+# Installs the Postflight skill into an OpenClaw workspace and prints next steps.
 # Default mode copies the skill; --dev symlinks it for live editing (requires
 # whitelisting the target via skills.load.allowSymlinkTargets in OpenClaw config).
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SKILL_SRC="$REPO_DIR/skill/x-poster"
+SKILL_SRC="$REPO_DIR/skill/postflight"
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
-SKILL_DEST="$WORKSPACE/skills/x-poster"
+SKILL_DEST="$WORKSPACE/skills/postflight"
 
 MODE="copy"
 if [[ $# -gt 0 ]]; then
@@ -27,6 +27,51 @@ fi
 
 mkdir -p "$WORKSPACE/skills"
 
+# ---------- one-time: this skill was named x-poster before the rename ----------
+
+LEGACY_DEST="$WORKSPACE/skills/x-poster"
+PARKED_DEST="$WORKSPACE/x-poster-pre-rename-backup"
+
+# A dev symlink holds no state of its own — that lives in the repo, which the
+# rename already moved — and it now points at a path that no longer exists.
+if [[ -L "$LEGACY_DEST" ]]; then
+  rm "$LEGACY_DEST"
+  echo "Removed the pre-rename symlink at $LEGACY_DEST"
+fi
+
+# Carries across the two things install.sh never writes and cannot recreate:
+# state/ (post log, metrics, photo library) and *.local.md. Then moves the old
+# directory OUT of skills/, because a leftover copy still has a valid SKILL.md
+# named x-poster and OpenClaw would load two skills. Nothing is deleted.
+migrate_legacy_state() {
+  [[ -d "$LEGACY_DEST" ]] || return 0
+  if [[ -e "$PARKED_DEST" ]]; then
+    echo "error: $PARKED_DEST already exists from an earlier run." >&2
+    echo "Move or delete it, then rerun." >&2
+    exit 1
+  fi
+  mkdir -p "$SKILL_DEST"
+  if [[ -d "$LEGACY_DEST/state" ]]; then
+    if [[ -d "$SKILL_DEST/state" ]]; then
+      echo "Note: $SKILL_DEST/state already exists, so the pre-rename state was"
+      echo "      left in the parked copy below rather than overwriting it."
+    else
+      mv "$LEGACY_DEST/state" "$SKILL_DEST/state"
+      echo "Moved state/ from the pre-rename install"
+    fi
+  fi
+  local lf
+  for lf in "$LEGACY_DEST"/*.local.md; do
+    [[ -f "$lf" ]] || continue
+    [[ -e "$SKILL_DEST/$(basename "$lf")" ]] && continue
+    mv "$lf" "$SKILL_DEST/"
+    echo "Moved $(basename "$lf") from the pre-rename install"
+  done
+  mv "$LEGACY_DEST" "$PARKED_DEST"
+  echo "Parked the pre-rename skill at $PARKED_DEST"
+  echo "  (delete it once postflight has run a full draft loop)"
+}
+
 if [[ "$MODE" == "dev" ]]; then
   if [[ -e "$SKILL_DEST" && ! -L "$SKILL_DEST" ]]; then
     echo "error: $SKILL_DEST exists and is not a symlink." >&2
@@ -44,10 +89,11 @@ else
     exit 1
   fi
   if [[ -d "$SKILL_DEST" && ! -f "$SKILL_DEST/SKILL.md" ]]; then
-    echo "error: $SKILL_DEST exists but doesn't look like an x-poster install." >&2
+    echo "error: $SKILL_DEST exists but doesn't look like a Postflight install." >&2
     echo "Refusing to overwrite it; move it out of the way first." >&2
     exit 1
   fi
+  migrate_legacy_state
   mkdir -p "$SKILL_DEST"
   rsync -a --delete \
     --exclude 'state/' \
@@ -78,9 +124,9 @@ Next steps (one-time, interactive; details in the repo README):
   2. X API auth (default posting mode; see skill PUBLISH-API.md):
        at console.x.com create a project with an app INSIDE it, enable
        OAuth 2.0 (callback http://localhost:8080/callback), install xurl, then:
-       xurl auth apps add x-poster --client-id ID --client-secret SECRET
-       xurl auth oauth2 --app x-poster
-       xurl auth default x-poster
+       xurl auth apps add postflight --client-id ID --client-secret SECRET
+       xurl auth oauth2 --app postflight
+       xurl auth default postflight
        xurl /2/users/me   # prints your handle when it all works
      (typing the secret inline leaves it in shell history — prefer running
       scripts/setup.sh, which prompts for it hidden; see docs/SETUP-MANUAL.md)
@@ -102,8 +148,8 @@ Next steps (one-time, interactive; details in the repo README):
      adjust to your audience and waking hours, and note every draft waits on
      your Telegram reply). The --channel/--to flags are required: isolated
      sessions have no default route, so a job without them fails closed:
-       openclaw cron create "30 9 * * *"  "Run the x-poster skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval." --name x-poster-own-work --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "30 12 * * *" "Run the x-poster skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval." --name x-poster-ai-news --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "0 15 * * *"  "Run the x-poster skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval." --name x-poster-aviation --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
-       openclaw cron create "0 8 * * 1"   "x-poster maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections, then run the weekly metrics readback per CONTENT.md \"Metrics readback\". Do not draft or publish." --name x-poster-backlog --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "30 9 * * *"  "Run the postflight skill: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars) and request approval." --name postflight-own-work --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "30 12 * * *" "Run the postflight skill: draft one post for slot 2 of the pillar schedule (CONTENT.md Pillars) and request approval." --name postflight-ai-news --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "0 15 * * *"  "Run the postflight skill: draft one post for slot 3 of the pillar schedule (CONTENT.md Pillars) and request approval." --name postflight-aviation --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
+       openclaw cron create "0 8 * * 1"   "postflight maintenance turn: refresh the content backlog per CONTENT.md, all pillar sections, then run the weekly metrics readback per CONTENT.md \"Metrics readback\". Do not draft or publish." --name postflight-backlog --session isolated --tz America/New_York --channel telegram --to <YOUR_USER_ID>
 EOF

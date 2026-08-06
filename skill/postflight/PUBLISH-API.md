@@ -86,7 +86,7 @@ literal string "/2/tweets". The HTTP method is only ever set with `-X`.
    and report. A 403 here whose body mentions scope or permissions means
    the OAuth token predates the `media.write` scope: report the body
    verbatim and tell the user to re-consent with
-   `xurl auth oauth2 --app x-poster`. Never re-authenticate yourself.
+   `xurl auth oauth2 --app postflight`. Never re-authenticate yourself.
 
 3. **Post the body.** Build the request body without shell-interpolating the
    tweet text (it derives from external content). xurl's `-d` takes a
@@ -226,9 +226,9 @@ cheap and safe:
 3. Install xurl (release binaries from github.com/xdevplatform/xurl), then:
 
    ```sh
-   xurl auth apps add x-poster --client-id CLIENT_ID --client-secret CLIENT_SECRET
-   xurl auth oauth2 --app x-poster    # browser consent; grants offline.access
-   xurl auth default x-poster         # so bare xurl commands use this app
+   xurl auth apps add postflight --client-id CLIENT_ID --client-secret CLIENT_SECRET
+   xurl auth oauth2 --app postflight    # browser consent; grants offline.access
+   xurl auth default postflight         # so bare xurl commands use this app
    xurl /2/users/me                   # prints your handle when it all works
    ```
 
@@ -236,7 +236,7 @@ cheap and safe:
    re-prompt for consent. The consent must also include `media.write` for
    media posts — current xurl versions request it; a token minted by an
    older xurl 403s on upload until you re-run `xurl auth oauth2 --app
-   x-poster`. The `apps add` command puts the client secret in
+   postflight`. The `apps add` command puts the client secret in
    your shell history as typed — prefix it with a space (with
    `HIST_IGNORE_SPACE`/`ignorespace` set) or scrub the history line after,
    and rotate the secret if it leaked. `setup.sh` avoids this with a hidden
