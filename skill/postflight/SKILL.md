@@ -25,6 +25,14 @@ run from the workspace root, NOT from here — always use `{baseDir}/...`
 absolute paths in commands (`wc {baseDir}/state/post-log.jsonl`, never
 `wc state/post-log.jsonl`), or `cd {baseDir}` first.
 
+**Never read `state/post-log.jsonl` whole.** It is append-only and grows
+for the life of the install — roughly 550 bytes a day at three posts,
+never shrinking. Every question asked of it below is answerable from a
+bounded slice, so reach for it through a shell filter (`tail -n`, `jq`)
+and let only the result enter the turn. The commands at each site say
+which slice. (`state/metrics.jsonl` grows the same way, and the digest in
+CONTENT.md "Metrics readback" still reads it in full by design.)
+
 ## Settings
 
 Re-read `{baseDir}/state/settings.json` at the start of every turn, even if
@@ -95,8 +103,20 @@ Decide which mode this turn is, in order:
    references. Never delete anything under `state/media/photos/` or under
    any directory named by a pillar's `media: photos:<dir>` property —
    those are the user's photo libraries, not yours to clean.
-2. **Check the cap.** Count entries in `{baseDir}/state/post-log.jsonl` dated
-   today (in `timezone`). If count >= `maxPerDay`, report that and stop.
+   Delete files in `{baseDir}/state/skipped/` older than 30 days: a
+   discarded draft is history nobody reads, and the directory has no
+   other sweep.
+2. **Check the cap.** Read the tail of the log, not the file:
+
+   ```sh
+   tail -n 20 {baseDir}/state/post-log.jsonl | jq -r '.date'
+   ```
+
+   Count the timestamps that fall on today's date **in `timezone`** —
+   the log stores UTC, so a late-evening post carries tomorrow's UTC
+   date and still counts as today. Twenty lines is at least six days at
+   the default cap, so today is always inside the slice. If the count is
+   >= `maxPerDay`, report that and stop.
 3. **Pick the pillar.** First resolve the active pillar set: read
    `{baseDir}/pillars.local.md` if it exists, per CONTENT.md "Pillar
    configuration" — otherwise CONTENT.md's defaults apply. The cron
@@ -105,7 +125,9 @@ Decide which mode this turn is, in order:
    request with no slot, use the furthest-behind rule in CONTENT.md. Then
    pick the topic within the pillar per its section (the angle cycle for
    `source: repos` pillars, the pillar's own angle rotation otherwise),
-   skipping anything resembling the last 10 entries in the post log.
+   skipping anything resembling the last 10 entries in the post log
+   (`tail -n 10 {baseDir}/state/post-log.jsonl | jq -r '.topic'` — the
+   topics are all you need to judge repetition).
 4. **Gather material.** Use the shell commands in CONTENT.md (`gh`, HN API).
    Only use facts you actually retrieved. Never invent features, numbers, or
    links.
@@ -209,8 +231,9 @@ that word. `ship it`, `just shipped v2`, or anything longer is NOT a command.
 
 - **ship** — first: if `state/pending/` is empty (already shipped, skipped, or
   swept), reply "nothing pending" and stop; never re-draft or re-post. Then
-  re-count today's entries in `state/post-log.jsonl` and refuse if the count
-  is already >= `maxPerDay`. Otherwise re-read the file named by `postVia`
+  re-count today's entries with the drafting step 2 command (the tail,
+  never the whole log) and refuse if the count is already >=
+  `maxPerDay`. Otherwise re-read the file named by `postVia`
   (PUBLISH-API.md or PUBLISH-BROWSER.md) in full and follow it as written,
   even if you read it earlier in this session or remember how you published
   last time — these docs get corrected between turns, and a remembered
