@@ -26,218 +26,125 @@ mode.
      leaks a user id; redact the bot's @name only if you'd rather not
      publish it. A real phone screenshot beats a mockup. -->
 
-## How it works
-
-OpenClaw is a personal AI agent that runs on your own machine. It connects
-a model (Claude or ChatGPT/Codex, through a subscription you already have)
-to messaging channels
-like Telegram, runs scheduled jobs, and is extended with **skills**:
-folders of markdown instructions the agent reads and follows. No code, no
-build step, no service to deploy.
-
-This project is one skill. The platform supplies the moving parts — cron
-wakes the agent, Telegram carries drafts and approvals back and forth,
-model auth reuses your Claude or ChatGPT/Codex subscription (so no API to
-set up and pay separately; the setup wizard asks which — the voice rules
-were tuned on Claude) — and a handful of markdown files in
-`skill/x-poster/` tell the agent what to do:
-
-| File | Job |
-|---|---|
-| `SKILL.md` | The workflow: modes, caps, approval semantics, failure rules |
-| `VOICE.md` | Writing rules, style anchors, and the personal-post register |
-| `CONTENT.md` | The pillar schedule, media recipes, and where material comes from |
-| `PUBLISH-API.md` | How to post through the X API with xurl, media upload and the link reply included |
-| `PUBLISH-BROWSER.md` | Browser fallback for accounts without a developer app |
-
-Each cron slot runs the same loop:
-
-1. Check the post log. Three posts a day maximum, nothing resembling the
-   last ten topics. Look up the slot's pillar in the weekly grid.
-2. Gather real material: commits, releases, and READMEs from your public
-   repos via the `gh` CLI, AI stories from the Hacker News API, or your
-   own notes and photos for any personal pillars you've added. Facts the
-   agent didn't fetch don't go in a draft.
-3. Write the post following the voice rules. For a repo post that means a
-   media-first package: a demo (GIF, code screenshot) with no URL in the
-   body, plus the repo link as a separate reply text — each verified
-   against X's real character weighting as a python one-liner.
-4. Send it to your Telegram, media included, so you approve the post as it
-   will actually appear. Reply `ship` to post, `skip` to discard, or
-   describe a change and it revises.
-5. On `ship`, post through the X API v2 (via `xurl`, X's official OAuth
-   CLI): upload the media, publish the tweet, confirm the returned id,
-   then publish the link as the first reply under it. Log the URLs.
-
-Content runs on weighted pillars instead of a flat rotation — at three
-posts a day that's 21 weekly slots. The shipped defaults: repo demos (8,
-media-first with the link in the reply, because link-card posts are the
-format X suppresses hardest), insights (10, pure text), and
-build-in-public (3). Personal pillars — a hobby backed by a photo
-library, a craft you teach — are per-install and live in one untracked
-file; see [docs/CUSTOMIZE.md](docs/CUSTOMIZE.md).
-
-Two things happen outside the daily loop. A weekly maintenance turn
-refreshes the content backlog and reads last week's posts' metrics into
-a Telegram digest (median impressions by pillar and format, follower
-delta), so adjusting the schedule is an informed edit rather than a
-guess. You can forward someone's post link to the bot to get two or
-three reply options drafted in your voice — each has to carry code, a
-gotcha, or a real number, and sending them stays manual, from your own
-client. And a photo pillar's library grows from your phone: send the
-bot a photo as a file with a one-line caption, and it lands in the
-library with its location metadata stripped, tagged, ready to post
-after its cooldowns.
-
 ## Quickstart
 
-Have three things ready:
+### 1. Get three things ready
 
-- [OpenClaw](https://docs.openclaw.ai) installed and onboarded, on Node
-  22.22+ or 24.15+ (`nvm install 24` settles it), plus an authenticated
-  `gh` CLI (`gh auth login`)
-- An X account with access to [console.x.com](https://console.x.com/)
-- A Telegram bot token from [@BotFather](https://t.me/BotFather) (`/newbot`)
+- **[OpenClaw](https://docs.openclaw.ai)** installed and onboarded, on Node
+  22.22+ or 24.15+ (`nvm install 24` settles it)
+- **An authenticated `gh` CLI** (`gh auth login`), so the agent can read
+  your repos
+- **An X account** with access to [console.x.com](https://console.x.com/),
+  and a **Telegram bot token** from [@BotFather](https://t.me/BotFather)
+  (`/newbot`)
 
-Then run the setup wizard:
+### 2. Run the wizard
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Soos3D/x-poster/main/scripts/setup.sh | bash
 ```
 
-If piping curl into bash isn't your thing, clone the repo and run
-`./scripts/setup.sh` (same script).
+Prefer not to pipe curl into bash? Clone the repo and run
+`./scripts/setup.sh`, which is the same script.
 
-The wizard runs everything scriptable and walks you through the two steps
-that can't be automated: creating the X app and pairing the Telegram bot.
-It probes real state before each step and skips whatever already works, so
-it's safe to rerun after any failure.
+It automates everything scriptable and walks you through the two steps that
+can't be: creating the X app and pairing the Telegram bot. It probes real
+state before each step and skips whatever already works, so rerunning after
+a failure is safe.
 
-When it finishes, message your bot "x-poster: draft a post" and reply
-`skip`. You'll watch the whole loop run without posting anything.
+### 3. Watch one loop run
 
-Afterwards:
+Message your bot:
 
-- `./scripts/setup.sh --check` reports every layer and changes nothing.
-- If the bot ignores an edit you just made to the skill files, send `/new`
-  to the bot. The persistent session only re-reads everything when it
-  starts.
-- Prefer to run every command yourself? The full manual walkthrough is in
-  [docs/SETUP-MANUAL.md](docs/SETUP-MANUAL.md).
+```
+x-poster: draft a post
+```
+
+Reply `skip`. You'll see the whole loop run without posting anything.
+
+### 4. Go live
+
+Once a draft looks right, reply `ship` instead. The wizard has already
+registered the cron jobs, so the next slot fires on its own.
+
+---
+
+Useful afterwards:
+
+```sh
+./scripts/setup.sh --check    # reports every layer, changes nothing
+```
+
+If the bot ignores an edit you just made, send `/new` to it. Sessions
+re-read skill files only when they start. More fixes in
+[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ## Make it yours
 
-Everything personal lives in untracked local files — `git pull` never
-conflicts with your customization. The full walkthrough is
-[docs/CUSTOMIZE.md](docs/CUSTOMIZE.md); the short version:
+Everything personal lives in untracked local files, so `git pull` never
+conflicts with your customization. Full walkthrough in
+[docs/CUSTOMIZE.md](docs/CUSTOMIZE.md).
 
-- **`pillars.local.md`** (copy `pillars.example.md` and edit) holds your
-  content pillars and weekly schedule: your topics, their weights, which
-  ones carry photos or links. Without it the skill runs a generic
-  repo-demos + insights schedule that works for any developer account.
-- **`voice-examples.local.md`** holds 3 to 5 of your own tweets. They
-  outrank every other style rule, so the account keeps sounding like you.
-  Local file, gitignored. Don't skip it.
-- **`styleAccounts`** in `state/settings.json` lists public accounts whose
-  register gets studied during style refreshes: patterns only, never
-  opinions or phrasings, and they're never named in posts.
+| What | Where | Why |
+|---|---|---|
+| Your topics and weekly schedule | `pillars.local.md` | Without it, a generic repo-demos + insights schedule runs |
+| 3 to 5 of your own tweets | `voice-examples.local.md` | They outrank every other style rule. Don't skip this one |
+| Accounts whose register to study | `styleAccounts` in `state/settings.json` | Patterns only, never named in posts |
 
-`VOICE.md` does the heavy lifting on quality. It bans hashtags, engagement
-bait, thread emoji, "excited to announce", and the phrasing tics that mark
-text as machine output, and requires every post to contain something a
-reader can use: a command, a gotcha, a number, a link to real code. The
-first draft I got from a local 7B model was "Excited about the progress!
-🚀 #OpenSource #DevLife". That file exists to prevent exactly that.
-
-One path detail: the default install copies the skill into
-`~/.openclaw/workspace/skills/x-poster/`, so that's where the local files
-and `state/settings.json` live; `install.sh` never touches `state/` or
-`*.local.md` there. Edits to tracked files in the checkout take effect
-after rerunning `./scripts/install.sh`, or install once with `--dev` to
-symlink instead. Posting times are cron jobs; change them by rerunning
-`./scripts/setup.sh` or with `openclaw cron`.
+These live in `~/.openclaw/workspace/skills/x-poster/`, where the default
+install copies the skill. `install.sh` never touches `state/` or
+`*.local.md`.
 
 ## Guardrails
 
-- Publishes one approved package and sends nothing else on X: the post,
-  plus — for repo posts — one reply under that same just-published post
-  carrying the link, approved together as a unit. No replies to anyone
-  else, no likes, follows, or DMs, ever. Beyond publishing, it reads
-  exactly two things: its own posts' metrics in the weekly maintenance
-  turn, and a single post you explicitly forward for reply drafting —
-  where drafting is all it does; sending stays yours.
-- Publishing requires the exact word `ship` from your Telegram user id
-  while a draft is pending. Anything else is an edit request; anyone else
-  is ignored. Drafts expire after 24 hours.
-- The daily cap is re-checked at publish time, not just at drafting time.
-- Fetched content (READMEs, commit messages, HN titles) is treated as
-  data. If a source contains instructions aimed at the agent, the source
-  is discarded and another topic picked.
-- Expired auth means stop and alert. The agent never attempts a login and
-  never touches credentials.
-- Honest limits: these rules are instructions the model follows, not
-  technical controls. The agent holds working X credentials and a shell, so
-  a sufficiently clever prompt injection could in principle bypass them.
-  The per-post approval gate exists precisely so anything that slips
-  through still has to get past you before it reaches your account —
-  supervise it like any automation with keys to something you care about.
+- The agent drafts; **you** approve. Publishing requires the exact word
+  `ship` from your Telegram user id. There is no autonomous mode.
+- It sends nothing else on X: no replies to anyone else, no likes, follows,
+  or DMs, ever.
+- Fetched content (READMEs, commit messages, HN titles) is treated as data.
+  A source carrying instructions aimed at the agent gets discarded.
+- Expired auth means stop and alert. The agent never attempts a login.
+
+These are instructions the model follows, not technical controls. The
+approval gate exists so anything that slips through still has to get past
+you. [Full detail and honest limits](docs/HOW-IT-WORKS.md#guardrails).
 
 ## Running it on a server
 
 A laptop install stops working every time the lid closes, so mine lives on
-a small DigitalOcean VM. Any 1–2 GB Ubuntu box works: the skill posts
-through the API and approvals go through Telegram, so nothing needs a
-display.
+a small DigitalOcean VM. Any 1–2 GB Ubuntu box works, since the skill posts
+through the API and approvals go through Telegram.
 
-Set up on the laptop first anyway. Two auth steps open a browser (the
-claude.ai token approval and the X OAuth consent), and the server can't do
-that; it receives the finished credentials instead:
+Set up on the laptop first anyway: two auth steps open a browser, and the
+server can't do that. It receives the finished credentials instead.
 
-```sh
-# server: install everything, Ctrl-C at the model-auth prompt
-git clone https://github.com/Soos3D/x-poster.git ~/x-poster
-cd ~/x-poster && ./scripts/setup.sh
+One rule matters more than the rest: **never have the laptop and the server
+live at the same time.** Two gateways fight over the same bot's updates,
+and two cron sets double-post.
 
-# laptop: package credentials and skill state, copy it over
-openclaw gateway stop
-./scripts/migrate-state.sh export
-scp ~/x-poster-state-*.tar.gz poster@SERVER:
+[docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md) walks the cutover in the safe
+order.
 
-# server: import, verify, then finish the wizard (Telegram + cron)
-./scripts/migrate-state.sh import ~/x-poster-state-*.tar.gz
-xurl /2/users/me            # must print your handle
-./scripts/setup.sh
-```
+## Docs
 
-One rule matters more than the rest: never have the laptop and the server
-live at the same time. Two gateways fight over the same Telegram bot's
-updates, and two cron sets double-post, because the daily cap is
-per-machine state. [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md) walks the
-cutover in the safe order.
-
-Updating later is git only: edit and push from the laptop, then on the
-server `git pull && ./scripts/install.sh` (`state/` is never touched).
-
-## About X's terms
-
-The default path posts through the official API with OAuth, which is
-exactly what X's automation rules ask for, and per-post human approval
-keeps it well clear of their spam policies. The browser fallback exists
-for accounts without a developer app; that mode sits outside the
-automation rules, so treat it as a stopgap and use it at your own risk.
-
-On cost: X's API posting is pay-per-use (observed ~$0.02/post), and the
-link-in-reply format means a repo post bills as two posts. That's the
-price of not shipping the format X suppresses hardest.
+| Doc | What's in it |
+|---|---|
+| [How it works](docs/HOW-IT-WORKS.md) | The daily loop, content pillars, guardrails, X's terms and cost |
+| [Manual setup](docs/SETUP-MANUAL.md) | Every command the wizard runs, for people who want to see them |
+| [Customize](docs/CUSTOMIZE.md) | Pillars, voice examples, photo libraries, posting times |
+| [Deploy to a VPS](docs/DEPLOY-VPS.md) | Server install and the laptop-to-server cutover |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | Symptoms and fixes |
 
 ## Contributing
 
 The interesting contributions here are instructions, not code: voice rules
-that survived real runs, content angles that produced posts worth
-shipping, setup fixes for platforms that broke, a publish doc for another
-network. See [CONTRIBUTING.md](CONTRIBUTING.md); the one non-negotiable is
-the approval gate. What's coming next (thread support, a second network,
-per-slot model overrides) lives in [ROADMAP.md](ROADMAP.md).
+that survived real runs, content angles that produced posts worth shipping,
+setup fixes for platforms that broke, a publish doc for another network.
+See [CONTRIBUTING.md](CONTRIBUTING.md). The one non-negotiable is the
+approval gate.
+
+What's coming next (thread support, a second network, per-slot model
+overrides) lives in [ROADMAP.md](ROADMAP.md).
 
 ## License
 
