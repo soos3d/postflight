@@ -66,7 +66,14 @@ do_export() {
   done
 
   umask 077
-  tar czf "$out" -C "$staging" .
+  # AppleDouble "._name" files extract as ordinary files on Linux, so a
+  # laptop-to-VPS migration can litter ~/.xurl and the skill's state/ with
+  # them. The 2026-08-03 migration to the droplet did exactly that; which
+  # step produced them was never pinned down, so guard both ways. Excluding
+  # them drops any already sitting in the source directories, and
+  # COPYFILE_DISABLE stops the tar versions that synthesise them from
+  # extended attributes. Neither costs anything when there is nothing to do.
+  COPYFILE_DISABLE=1 tar czf "$out" -C "$staging" --exclude '._*' .
   say "Exported to $out (mode 0600). Contents:"
   tar tzf "$out" | sed 's/^/  /'
   say ""
@@ -92,7 +99,9 @@ do_import() {
 
   staging="$(mktemp -d)"
   trap 'rm -rf "${staging:-}"' EXIT
-  tar xzf "$tarball" -C "$staging"
+  # --exclude covers tarballs written before the export learned to suppress
+  # them; both GNU tar and bsdtar accept it.
+  tar xzf "$tarball" -C "$staging" --exclude '._*'
   [[ -f "$staging/MANIFEST" ]] || die "not a migrate-state tarball (MANIFEST missing)"
 
   place_dir "$staging/xurl" "$HOME/.xurl"
