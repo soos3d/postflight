@@ -6,7 +6,8 @@
 #
 # Every step probes real state first and skips what's already done, so the
 # script is safe to rerun after any failure and doubles as a health check.
-# --check reports the state of every step and changes nothing.
+# --check reports the state of every step and changes nothing. It exits
+# nonzero when a layer the draft round trip needs is still missing.
 # --dev installs the skill as a symlink instead of a copy.
 #
 # The two things it cannot do for you: create the X app (console.x.com) and
@@ -48,11 +49,19 @@ done
 
 RESULTS=()
 CURRENT_STEP="startup"
+# Cleared by anything that stops a draft from going out, so the closing
+# pointer can tell "ready to post" from "still missing a layer".
+READY=1
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; RESULTS+=("✓ $1"); }
 todo() { printf '  \033[33m•\033[0m %s\n' "$1"; RESULTS+=("• $1"); }
-fail() { printf '  \033[31m✗\033[0m %s\n' "$1" >&2; RESULTS+=("✗ $1"); }
+fail() { printf '  \033[31m✗\033[0m %s\n' "$1" >&2; RESULTS+=("✗ $1"); READY=0; }
 step() { CURRENT_STEP="$1"; printf '\n\033[1m%s\033[0m\n' "$1"; }
 die()  { printf '\033[31merror:\033[0m %s\n' "$1" >&2; exit 1; }
+
+# A • the draft round trip cannot run without, as opposed to an optional one
+# (media tools, gh). Both read the same on screen; only this one suppresses
+# the "message your bot" pointer at the end.
+need() { todo "$1"; READY=0; }
 
 # Temp files are registered here and removed on exit. RETURN traps are
 # deliberately avoided: bash 3.2 (macOS) drops them after the setting
@@ -63,8 +72,19 @@ trap 'rm -rf ${CLEANUP[@]+"${CLEANUP[@]}"} 2>/dev/null' EXIT
 
 # With -E this fires for unexpected failures inside functions too, so the
 # wizard always says where it stopped instead of exiting silently.
+MAIN_SHELL_PID=$$
+# -E also hands the trap to every command substitution, and a failure inside
+# one of those is the caller's business: `if h="$(x_handle)"` handles its own
+# failure, and reporting it here would print a step failure the caller goes
+# on to absorb — then send summary() into $h instead of to the screen. Only
+# the main shell reports. BASHPID would answer this directly but is bash 4+,
+# and macOS ships 3.2; a forked child's PPID is the pid of the shell that
+# forked it, which is the same answer everywhere.
 on_err() {
-  local rc=$1
+  local rc=$1 here
+  here="${BASHPID:-}"
+  [[ -n "$here" ]] || here="$(exec sh -c 'echo $PPID')"
+  [[ "$here" == "$MAIN_SHELL_PID" ]] || return "$rc"
   fail "step \"$CURRENT_STEP\" failed (exit $rc) — fix the message above and rerun to resume"
   summary
   exit "$rc"
@@ -243,7 +263,7 @@ step_skill() {
     ok "skill installed at $dest"
     return 0
   fi
-  if [[ $CHECK_ONLY -eq 1 ]]; then todo "skill not installed"; return 0; fi
+  if [[ $CHECK_ONLY -eq 1 ]]; then need "skill not installed"; return 0; fi
   bash "$REPO_DIR/scripts/install.sh" --quiet
   ok "skill installed at $dest"
 }
@@ -393,7 +413,7 @@ step_model() {
       return 0
     fi
   done
-  if ! interactive; then todo "model auth not configured (run without --check, in a terminal)"; return 0; fi
+  if ! interactive; then need "model auth not configured (run without --check, in a terminal)"; return 0; fi
   echo "  Which subscription should draft the posts?"
   echo "    1) Claude (Anthropic) — the voice rules were tuned and validated here"
   echo "    2) ChatGPT/Codex (OpenAI) — supported; draft quality not yet validated"
@@ -412,7 +432,7 @@ step_x() {
   step "X API access"
   local handle
   if handle="$(x_handle)"; then ok "posting as @$handle"; return 0; fi
-  if ! interactive; then todo "X auth not configured"; return 0; fi
+  if ! interactive; then need "X auth not configured"; return 0; fi
   cat <<'EOF'
   Do this once at https://console.x.com/ :
     1. Create a PROJECT, and an app INSIDE it (a standalone app fails every
@@ -509,7 +529,7 @@ step_telegram() {
     ok "telegram channel installed, approvals go to $to"
     return 0
   fi
-  if ! interactive; then todo "telegram not fully configured"; return 0; fi
+  if ! interactive; then need "telegram not fully configured"; return 0; fi
   telegram_channel_installed || add_telegram_channel
   echo "  Now send any message to your bot from your own Telegram account."
   echo "  It replies with your numeric user id and a pairing code."
@@ -552,8 +572,19 @@ cron_msg_for() {
   esac
 }
 
-# A failed listing must never read as "nothing exists" — that would create
-# duplicate jobs on the next line.
+# True when the gateway answers. Every cron decision below reads the listing
+# first, and a listing that cannot be read must never be treated as "nothing
+# is registered" — that would register a second full set and double-post. The
+# `|| rc=$?` is what keeps the ERR trap out of it: the failure is expected on
+# a box whose gateway is not up yet, and step_cron reports it.
+cron_readable() {
+  local rc=0
+  openclaw cron list --json >/dev/null 2>&1 || rc=$?
+  [[ $rc -eq 0 ]]
+}
+
+# Callers check cron_readable first, so this is the backstop for the gateway
+# going away mid-step rather than the path a fresh install takes.
 cron_missing() {
   local existing status=0 name out=()
   existing="$(openclaw cron list --json 2>/dev/null | jq -r '.jobs[]?.name')" || status=$?
@@ -657,6 +688,14 @@ cron_migrate_messages() {
 step_cron() {
   step "Cron schedule"
   local missing
+  # The gateway is what serves the cron API, and `openclaw gateway install`
+  # is part of the Telegram step above — so on a fresh box, or with --check
+  # run before that step, there is nothing to ask. Report and move on: the
+  # steps after this one still have something useful to say.
+  if ! cron_readable; then
+    halt "could not read cron jobs — start the gateway (openclaw gateway install) and rerun; refusing to guess"
+    return 0
+  fi
   cron_migrate_names
   missing="$(cron_missing)"
   if [[ -z "$missing" ]]; then
@@ -755,11 +794,17 @@ step_hooks() {
 summary() {
   printf '\n\033[1m%s\033[0m\n' "Summary"
   printf '  %s\n' ${RESULTS[@]+"${RESULTS[@]}"}
-  cat <<'EOF'
-
-Next: message your bot "postflight: draft a post" and reply ship or skip.
-Rerun this script anytime — it only touches what's missing.
-EOF
+  printf '\n'
+  # Sending someone to their bot before the model, X, and Telegram layers are
+  # up gets them silence and no way to tell which layer ate it. Point at the
+  # gap instead, and keep the pointer for the run that has none.
+  if [[ $READY -eq 1 ]]; then
+    printf 'Next: message your bot "postflight: draft a post" and reply ship or skip.\n'
+  else
+    printf 'Next: finish the items marked ✗ or • above (rerun without --check,\n'
+    printf 'in a terminal, and it walks you through them).\n'
+  fi
+  printf "Rerun this script anytime — it only touches what's missing.\n"
 }
 
 ensure_repo "$@"
@@ -777,3 +822,7 @@ step_cron
 step_pillars
 step_voice
 summary
+# A report that reached the end still exits nonzero when a layer a draft needs
+# is missing, so `setup.sh --check` stays usable as a gate. Optional gaps (gh,
+# media tools, an uncustomized pillar file) do not count.
+[[ $READY -eq 1 ]] || exit 1
