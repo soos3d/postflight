@@ -49,9 +49,19 @@
         <div class="install">
           <label for="install-cmd" class="install-label">Install</label>
           <div class="install-row">
-            <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/soos3d/postflight/main/scripts/setup.sh | bash</code>
+            <code id="install-cmd" class="install-cmd">curl -fsSL https://raw.githubusercontent.com/soos3d/postflight/main/scripts/setup.sh | bash</code>
             <button type="button" class="copy-btn" data-copy="#install-cmd">Copy</button>
           </div>
+
+          <label for="install-clawhub" class="install-label install-label-alt">Or the skill alone, from ClawHub</label>
+          <div class="install-row">
+            <code id="install-clawhub" class="install-cmd">openclaw skills install @soos3d/postflight</code>
+            <button type="button" class="copy-btn" data-copy="#install-clawhub">Copy</button>
+          </div>
+          <p class="install-note">
+            That's the instructions only. The X app, the Telegram bot, and the
+            schedule still come from the wizard above.
+          </p>
         </div>
 
         <div class="cta-row">

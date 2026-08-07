@@ -224,9 +224,17 @@ h1 {
   padding: var(--s-2);
 }
 
+.install-label-alt { margin-top: var(--s-4); }
+
+.install-note {
+  margin-top: var(--s-2);
+  font-size: 14px;
+  color: var(--muted);
+}
+
 /* This is the primary CTA, so the whole command has to be readable. A single
    scrolling line hides the half that tells you what you're piping into bash. */
-#install-cmd {
+.install-cmd {
   flex: 1 1 auto;
   min-width: 0;
   white-space: pre-wrap;

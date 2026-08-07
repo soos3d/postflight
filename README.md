@@ -59,6 +59,21 @@ can't be: creating the X app and pairing the Telegram bot. It probes real
 state before each step and skips whatever already works, so rerunning after
 a failure is safe.
 
+**Want the skill files from a registry instead?** It's published on
+[ClawHub](https://clawhub.ai/soos3d/skills/postflight):
+
+```sh
+openclaw skills install @soos3d/postflight
+```
+
+That unpacks the skill into `~/.openclaw/workspace/skills/postflight` and
+stops there. It is the skill's instructions and nothing else: no X or
+Telegram auth, no cron jobs, no `setup.sh`. Run the wizard afterwards for
+those — it leaves the installed files alone and picks up from there. What
+each path does and doesn't cover is in
+[Manual setup](docs/SETUP-MANUAL.md#from-clawhub-instead), including why
+`openclaw skills update` is the wrong way to upgrade this one.
+
 ### 3. Watch one loop run
 
 Message your bot:

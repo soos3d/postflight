@@ -194,6 +194,20 @@ dev_install_ok() {
   [[ -L "$dest" && "$(readlink "$dest")" == "$REPO_DIR/skill/postflight" ]] && symlink_trusted
 }
 
+# A ClawHub install (openclaw skills install @soos3d/postflight) unpacks the
+# published files and nothing else, so the state/ scaffold install.sh creates
+# is absent and every step below that reads state/settings.json would die on
+# it. Same commands install.sh runs, and idempotent, so a tree installed the
+# usual way passes through untouched.
+ensure_state_scaffold() {
+  local dir="$1"
+  mkdir -p "$dir/state/pending" "$dir/state/skipped" "$dir/state/media"
+  touch "$dir/state/post-log.jsonl" "$dir/state/backlog.md"
+  [[ -f "$dir/state/settings.json" ]] && return 0
+  cp "$dir/settings.example.json" "$dir/state/settings.json"
+  echo "  Created state/settings.json from settings.example.json"
+}
+
 step_skill() {
   step "Skill install"
   local dest="$WORKSPACE/skills/postflight"
@@ -208,7 +222,17 @@ step_skill() {
     ok "skill symlinked and trusted at $dest"
     return 0
   fi
-  if [[ -f "$dest/SKILL.md" && ! -L "$dest" ]]; then ok "skill installed at $dest"; return 0; fi
+  if [[ -f "$dest/SKILL.md" && ! -L "$dest" ]]; then
+    if [[ $CHECK_ONLY -eq 1 ]]; then
+      ok "skill installed at $dest"
+      [[ -f "$dest/state/settings.json" ]] \
+        || todo "state/ scaffold missing — rerun without --check to create it"
+    else
+      ensure_state_scaffold "$dest"
+      ok "skill installed at $dest"
+    fi
+    return 0
+  fi
   if [[ $CHECK_ONLY -eq 1 ]]; then todo "skill not installed"; return 0; fi
   bash "$REPO_DIR/scripts/install.sh" --quiet
   ok "skill installed at $dest"
