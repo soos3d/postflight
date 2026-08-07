@@ -31,7 +31,9 @@ never shrinking. Every question asked of it below is answerable from a
 bounded slice, so reach for it through a shell filter (`tail -n`, `jq`)
 and let only the result enter the turn. The commands at each site say
 which slice. (`state/metrics.jsonl` grows the same way, and the digest in
-CONTENT.md "Metrics readback" still reads it in full by design.)
+CONTENT.md "Metrics readback" still reads it in full — deliberately, for
+now: a median over a tail is a different statistic than a median over all
+history. Bounding it without changing what the numbers mean is issue #25.)
 
 ## Settings
 
