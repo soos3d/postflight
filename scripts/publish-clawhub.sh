@@ -97,11 +97,43 @@ if grep -rIl --exclude-dir=.git -E '[0-9]{8,}' "$STAGE" >/dev/null 2>&1; then
   grep -rIn --exclude-dir=.git -E '[0-9]{8,}' "$STAGE" | sed "s|$STAGE/||" >&2
 fi
 
+# ClawHub links a listing back to its repo only when the publish carries these
+# four. Without them the page is a dead end: no source to read, no issues to
+# file, no license to check. Derived from the origin remote rather than
+# hardcoded, so publishing a fork points at the fork.
+SOURCE_ARGS=()
+origin_url="$(git remote get-url origin 2>/dev/null || true)"
+case "$origin_url" in
+  git@github.com:*)     source_repo="${origin_url#git@github.com:}" ;;
+  https://github.com/*) source_repo="${origin_url#https://github.com/}" ;;
+  *)                    source_repo="" ;;
+esac
+source_repo="${source_repo%.git}"
+
+if [ -n "$source_repo" ]; then
+  # A tag when the commit carries one (what a release publish is), the branch
+  # otherwise. Never the bare sha: --source-commit already pins that exactly.
+  source_ref="$(git describe --tags --exact-match 2>/dev/null || git rev-parse --abbrev-ref HEAD)"
+  SOURCE_ARGS=(
+    --source-repo "$source_repo"
+    --source-commit "$(git rev-parse HEAD)"
+    --source-ref "$source_ref"
+    --source-path "$SKILL_PATH"
+  )
+else
+  printf 'note: origin is not a GitHub remote — the listing will have no source link\n' >&2
+fi
+
 printf '\nStaged for ClawHub as %s v%s:\n\n' "$SLUG" "$VERSION"
 (cd "$STAGE" && find . -type f | sed 's|^\./|  |' | sort)
 printf '\n  %s files, %s\n\n' \
   "$(find "$STAGE" -type f | wc -l | tr -d ' ')" \
   "$(du -sh "$STAGE" | cut -f1)"
+
+if [ -n "$source_repo" ]; then
+  printf '  source: %s %s @ %s, path %s\n\n' \
+    "$source_repo" "$source_ref" "$(git rev-parse --short HEAD)" "$SKILL_PATH"
+fi
 
 if [ "$DO_PUBLISH" -eq 0 ]; then
   printf 'Dry run. Re-run with --publish to upload.\n'
@@ -110,10 +142,13 @@ fi
 
 command -v clawhub >/dev/null 2>&1 || die "clawhub CLI not found — npm i -g clawhub, then clawhub login"
 
+# bash 3.2 (macOS) treats "${arr[@]}" on an empty array as unbound under set -u,
+# so the expansion has to be guarded rather than written plainly.
 clawhub skill publish "$STAGE" \
   --slug "$SLUG" \
   --name "$NAME" \
-  --version "$VERSION"
+  --version "$VERSION" \
+  ${SOURCE_ARGS[@]+"${SOURCE_ARGS[@]}"}
 
 # The listing lives under the publisher handle; a bare /<slug> is a 404.
 PUBLISHER="$(clawhub whoami 2>/dev/null | grep -oE '[A-Za-z0-9_-]+' | tail -1 || true)"
