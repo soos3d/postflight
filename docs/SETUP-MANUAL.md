@@ -41,6 +41,51 @@ openclaw skills list          # postflight should show ✓ ready
 > `skills.load.allowSymlinkTargets` in `~/.openclaw/openclaw.json`. The
 > installer prints the exact snippet to paste.
 
+### From ClawHub instead
+
+The skill is published at
+[clawhub.ai/soos3d/skills/postflight](https://clawhub.ai/soos3d/skills/postflight),
+so you can install it without cloning anything:
+
+```sh
+openclaw skills install @soos3d/postflight
+openclaw skills install @soos3d/postflight --version 1.1.0   # or pin it
+```
+
+It prompts you to acknowledge ClawHub's trust warning before unpacking. The
+files land in `~/.openclaw/workspace/skills/postflight`, the same place
+`install.sh` copies them, and it refuses to run if something is already
+there — that refusal is what protects an existing install's `state/`.
+
+What ships is the reviewed list in `scripts/clawhub-manifest.txt`: the
+instruction files, `ingest-photo.sh`, `pillars.example.md`, and
+`settings.example.json`. `state/` and the `*.local.md` files are kept off
+it on purpose, since publishing them would put your Telegram user id and
+your post history on a public registry. That leaves a ClawHub install
+without its state directory, the one thing `install.sh` does that this path
+doesn't:
+
+```sh
+cd ~/.openclaw/workspace/skills/postflight
+mkdir -p state/pending state/skipped state/media
+touch state/post-log.jsonl state/backlog.md
+cp settings.example.json state/settings.json
+```
+
+`setup.sh` creates that scaffold for you if it finds the skill already
+installed, so running the wizard after a ClawHub install is enough. Steps 2
+through 6 below are unchanged either way — the registry hands you
+instructions, not a working X app, Telegram bot, or cron schedule.
+
+> **Don't upgrade this skill with `openclaw skills update`.** That command,
+> and `skills install --force`, replace the whole skill directory: the old
+> one is moved aside and deleted once the new files land. Your `state/`
+> (post log, metrics, photo library) and your `pillars.local.md` and
+> `voice-examples.local.md` go with it. Upgrade with `git pull &&
+> ./scripts/install.sh`, which excludes exactly those paths. If you have no
+> checkout and want the registry path anyway, copy `state/` and the
+> `*.local.md` files somewhere else first and put them back afterward.
+
 ## 2. Connect a model
 
 Use a frontier model. Small local models write exactly the slop `VOICE.md`
