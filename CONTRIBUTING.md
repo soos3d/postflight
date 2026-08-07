@@ -45,8 +45,9 @@ stages the skill for ClawHub to prove nothing personal would ship, and checks
 every relative link in the markdown (external links are deliberately not
 checked — they rot on someone else's schedule).
 
-Leave `telegramTo` empty in `state/settings.json` and the skill runs in
-draft mode: drafts land in `state/drafts.md`, nothing is sent or posted.
+Leave `telegramTo` empty in `postflight-state/settings.json` and the skill
+runs in draft mode: drafts land in `postflight-state/drafts.md`, nothing is
+sent or posted.
 That's the safe way to exercise a voice or content change end to end.
 
 Remember the running Telegram session caches the skill files: send `/new` to
@@ -56,7 +57,8 @@ the bot after editing, or your change silently isn't being tested.
 
 - Small and focused. Say which run or failure motivated the change.
 - Commit format: `<type>: <description>` (feat, fix, docs, chore).
-- Never commit anything from `state/`, any `*.local.md` file, or `.env`. They
+- Never commit anything from `postflight-state/`, any `*.local.md` file, or
+  `.env`. They
   hold credentials, a Telegram user id, and someone's own posts. They are
   gitignored, and `./scripts/install-hooks.sh` adds a pre-commit hook that
   blocks them even from a `git add -f`.

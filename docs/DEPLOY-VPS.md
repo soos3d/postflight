@@ -147,7 +147,7 @@ openclaw gateway status && openclaw doctor
 With the laptop gateway still **stopped**:
 
 1. Message the bot `postflight: draft a post`. The draft must come from the
-   server. Reply `skip` and check `state/skipped/` on the server.
+   server. Reply `skip` and check `postflight-state/skipped/` on the server.
 2. Run one full `ship` round trip. Confirm the permalink and the post-log
    entry on the server.
 
@@ -185,7 +185,7 @@ The laptop is the dev machine. The server only consumes git:
 ```sh
 # laptop: edit, commit, push
 # server:
-cd ~/postflight && git pull && ./scripts/install.sh   # state/ and *.local.md are never touched
+cd ~/postflight && git pull && ./scripts/install.sh   # postflight-state/ is never touched
 ./scripts/setup.sh                                    # only if the release changed config
 ```
 
@@ -198,6 +198,19 @@ model fallback chain in v1.1.0, for instance — lands through `setup.sh`, which
 configures whatever is missing and leaves everything else alone. Release notes
 say when it's needed; running it anyway is safe.
 
+From v1.2.0 the registry is a second route for the skill files alone:
+
+```sh
+openclaw skills update @soos3d/postflight
+```
+
+That replaces the instruction files and touches nothing else, because
+`postflight-state/` sits outside the folder it replaces. It does **not**
+update `~/postflight`, so the scripts and docs on the box stay at whatever
+version git left them — take the git route when a release changes `setup.sh`
+or the cron messages, and keep both machines on the same release before
+running `migrate-state.sh` in either direction.
+
 ### Upgrading from x-poster
 
 The skill was called x-poster before v1.0.0. Pulling that rename needs one
@@ -206,13 +219,15 @@ extra step, `setup.sh`, because the cron jobs carry the old name too:
 > **This runs automatically until 2026-11-01.** After that the migration
 > code comes out of `install.sh` and `setup.sh`. Upgrading a pre-v1.0.0
 > install later still works, by hand: move `state/` and your `*.local.md`
-> files from `skills/x-poster/` to `skills/postflight/`, delete the old
-> directory, then delete and recreate the cron jobs (the commands are in
-> [SETUP-MANUAL.md](SETUP-MANUAL.md#6-test-then-schedule)).
+> files out of `skills/x-poster/` and into `postflight-state/`, delete the
+> old directory, then delete and recreate the cron jobs (the commands are in
+> [SETUP-MANUAL.md](SETUP-MANUAL.md#6-test-then-schedule)). The separate
+> 2027-02-01 shim that moves state out of the skill folder is still needed
+> either way.
 
 ```sh
 cd ~/postflight && git pull
-./scripts/install.sh    # moves state/ and *.local.md to skills/postflight/
+./scripts/install.sh    # moves state/ and *.local.md to postflight-state/
 ./scripts/setup.sh      # renames the cron jobs, keeping times and routes
 openclaw cron list      # confirm the count is unchanged
 ```
@@ -228,10 +243,11 @@ Personal config (`pillars.local.md`, `voice-examples.local.md`) is
 untracked, so it doesn't travel through git. It reaches a new box two ways:
 
 - `migrate-state.sh`, which carries every `*.local.md`
-- a plain `scp` into `~/.openclaw/workspace/skills/postflight/`
+- a plain `scp` into `~/.openclaw/workspace/postflight-state/`
 
-A photo library works the same way. It lives under `state/media/photos/`,
-which `migrate-state.sh` carries with the rest of the state. It's the one
+A photo library works the same way. It lives under
+`postflight-state/media/photos/`, which `migrate-state.sh` carries with the
+rest of the state. It's the one
 piece of state that keeps originating on your laptop, so `scp` new photos
 over (or run `ingest-photo.sh` on the server) as you add them.
 

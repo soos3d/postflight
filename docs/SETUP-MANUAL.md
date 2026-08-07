@@ -49,42 +49,54 @@ so you can install it without cloning anything:
 
 ```sh
 openclaw skills install @soos3d/postflight
-openclaw skills install @soos3d/postflight --version 1.1.0   # or pin it
+openclaw skills install @soos3d/postflight --version 1.2.0   # or pin it
 ```
 
 It prompts you to acknowledge ClawHub's trust warning before unpacking. The
 files land in `~/.openclaw/workspace/skills/postflight`, the same place
 `install.sh` copies them, and it refuses to run if something is already
-there — that refusal is what protects an existing install's `state/`.
+there — that refusal keeps it from overwriting an install you already have.
 
 What ships is the reviewed list in `scripts/clawhub-manifest.txt`: the
 instruction files, `ingest-photo.sh`, `pillars.example.md`, and
-`settings.example.json`. `state/` and the `*.local.md` files are kept off
-it on purpose, since publishing them would put your Telegram user id and
-your post history on a public registry. That leaves a ClawHub install
-without its state directory, the one thing `install.sh` does that this path
-doesn't:
+`settings.example.json`. Nothing personal is on it, and nothing personal
+lives in that folder any more either — since v1.2.0 your settings, post log,
+metrics, photo library, and both `*.local.md` files live in
+`~/.openclaw/workspace/postflight-state/`, one level up from `skills/`.
+
+That is what makes the registry path work as more than a first install. The
+skill folder holds instructions and nothing else, so replacing it costs
+nothing:
 
 ```sh
-cd ~/.openclaw/workspace/skills/postflight
-mkdir -p state/pending state/skipped state/media
-touch state/post-log.jsonl state/backlog.md
-cp settings.example.json state/settings.json
+openclaw skills update @soos3d/postflight    # safe from 1.2.0 onward
 ```
 
-`setup.sh` creates that scaffold for you if it finds the skill already
-installed, so running the wizard after a ClawHub install is enough. Steps 2
-through 6 below are unchanged either way — the registry hands you
-instructions, not a working X app, Telegram bot, or cron schedule.
+The state directory is created on demand — by `setup.sh`, by
+`scripts/install.sh`, or by the skill itself on its first turn — so a
+ClawHub install needs no scaffolding step. Steps 2 through 6 below are
+unchanged either way: the registry hands you instructions, not a working X
+app, Telegram bot, or cron schedule.
 
-> **Don't upgrade this skill with `openclaw skills update`.** That command,
-> and `skills install --force`, replace the whole skill directory: the old
-> one is moved aside and deleted once the new files land. Your `state/`
-> (post log, metrics, photo library) and your `pillars.local.md` and
-> `voice-examples.local.md` go with it. Upgrade with `git pull &&
-> ./scripts/install.sh`, which excludes exactly those paths. If you have no
-> checkout and want the registry path anyway, copy `state/` and the
-> `*.local.md` files somewhere else first and put them back afterward.
+> **The one upgrade that is not safe is 1.1.0 → 1.2.0.** Before 1.2.0 the
+> state directory was *inside* the skill folder, and `openclaw skills
+> update` replaces that folder wholesale — the old one is moved aside and
+> deleted once the new files land. The relocation cannot run until the new
+> files exist, and by then the old directory is gone. So this specific hop
+> takes your post log, metrics, photo library, and both `*.local.md` files
+> with it.
+>
+> Make that one hop with `git pull && ./scripts/install.sh`, which moves
+> your state out of the way first. With no checkout, copy the directory
+> somewhere safe and put it back under its new name afterward:
+>
+> ```sh
+> cp -R ~/.openclaw/workspace/skills/postflight/state /tmp/pf-state
+> openclaw skills update @soos3d/postflight
+> mv /tmp/pf-state ~/.openclaw/workspace/postflight-state
+> ```
+>
+> Every upgrade after that one is a plain `skills update`.
 
 ## 2. Connect a model
 
@@ -227,7 +239,7 @@ browser instead:
 openclaw browser open https://x.com     # log in once, in the managed profile
 ```
 
-Then set `"postVia": "browser"` in `state/settings.json`. That mode needs a
+Then set `"postVia": "browser"` in `postflight-state/settings.json`. That mode needs a
 machine with a display, publishes single text posts only, and sits outside
 X's automation rules — see `PUBLISH-BROWSER.md` in the skill folder before
 you rely on it.
@@ -281,16 +293,14 @@ openclaw gateway restart
 
 ### 4.3 Set the approval gate
 
-Put the same user id in the **installed** skill's `state/settings.json` as
-`telegramTo` — `~/.openclaw/workspace/skills/postflight/state/settings.json`
-after a default install, or `skill/postflight/state/settings.json` in the
-checkout if you installed with `--dev` (same tree). `install.sh` never copies
-`state/`, so editing the checkout's copy after a copy install changes nothing
-the agent reads.
+Put the same user id in `~/.openclaw/workspace/postflight-state/settings.json`
+as `telegramTo`. That is one path for every install shape — copy, `--dev`
+symlink, or ClawHub — because the state directory is anchored to the
+workspace rather than to wherever the skill files landed.
 
 That field is the approval gate: only that sender can ship a draft. While
-it's empty the skill runs in draft mode, writing to `state/drafts.md`,
-sending nothing and posting nothing.
+it's empty the skill runs in draft mode, writing to
+`postflight-state/drafts.md`, sending nothing and posting nothing.
 
 ## 5. Add your personal files
 
@@ -299,9 +309,9 @@ Three local files the repo never sees. Full walkthrough in
 
 | File | What goes in it |
 |---|---|
-| `pillars.local.md` | Your content pillars and weekly schedule. Copy `pillars.example.md`, edit it, and delete its `TEMPLATE` line. Without this file, the generic default schedule runs |
+| `pillars.local.md` | Your content pillars and weekly schedule. Copy the skill folder's `pillars.example.md` into `postflight-state/`, edit it, and delete its `TEMPLATE` line. Without this file, the generic default schedule runs |
 | `voice-examples.local.md` | 3 to 5 of your own tweets. These outrank everything else, so the output stays yours rather than generically fluent |
-| `state/settings.json` → `styleAccounts` | A few public accounts whose register you want studied during style refreshes |
+| `settings.json` → `styleAccounts` | A few public accounts whose register you want studied during style refreshes |
 
 ## 6. Test, then schedule
 
@@ -316,12 +326,12 @@ Leave `telegramTo` empty and run one turn:
 openclaw agent --local --agent main -m "postflight drafting turn: draft one post for slot 1 of the pillar schedule (CONTENT.md Pillars)."
 ```
 
-Read the result in `state/drafts.md` against `VOICE.md`.
+Read the result in `postflight-state/drafts.md` against `VOICE.md`.
 
 ### 6.2 Telegram round trip
 
 Set `telegramTo`, message your bot `postflight: draft a post`, and reply
-`skip`. The draft should land in `state/skipped/` and nowhere else.
+`skip`. The draft should land in `postflight-state/skipped/` and nowhere else.
 
 Then run one full `ship` and confirm the permalink.
 

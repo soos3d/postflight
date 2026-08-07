@@ -72,8 +72,8 @@ never acceptable. Three outcomes:
 - **`postflight-state/` is missing and the skill folder has a `state/`
   directory inside it.** This install predates the state move and its
   history is still sitting where the next upgrade deletes it. **Stop.** Tell
-  the user to
-  run `scripts/relocate-state.sh` from their checkout, or with no checkout:
+  the user to run `scripts/relocate-state.sh` from their checkout, or with
+  no checkout:
   `mv ~/.openclaw/workspace/skills/postflight/state
   ~/.openclaw/workspace/postflight-state`. Read and write neither directory
   in the meantime. (This case comes out on 2027-02-01.)

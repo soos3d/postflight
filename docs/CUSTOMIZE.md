@@ -13,14 +13,18 @@ overwrites it.
 
 ## Where these files live
 
-The default install **copies** the skill into
-`~/.openclaw/workspace/skills/postflight/`. That copy is what the agent
-reads, so that's where these files belong.
+Everything on this page lives in `~/.openclaw/workspace/postflight-state/`,
+alongside the post log and your photo library. That is one path for every
+install shape — copy, `--dev` symlink, or ClawHub — because the directory is
+anchored to the workspace rather than to wherever the skill files landed.
 
-`install.sh` never touches `state/` or any `*.local.md` file there. But
-edits to *tracked* files in your checkout only take effect after rerunning
-`./scripts/install.sh` — or install once with `--dev` to symlink the
-checkout instead.
+It sits outside `skills/postflight/` on purpose: an upgrade replaces that
+folder wholesale, so nothing you write here can be reached by installing or
+updating the skill.
+
+Edits to *tracked* files in your checkout are the other half — those only
+take effect after rerunning `./scripts/install.sh`, or install once with
+`--dev` to symlink the checkout instead.
 
 **After changing any of this, send `/new` to your bot.** The persistent
 session re-reads files only when it starts.
@@ -31,8 +35,8 @@ The skill ships a generic schedule — `builds` (own-repo demos), `insights`,
 and `build-in-public`, 21 slots a week. To add your own topics:
 
 ```sh
-cd ~/.openclaw/workspace/skills/postflight   # or the checkout, with --dev
-cp pillars.example.md pillars.local.md
+cd ~/.openclaw/workspace
+cp skills/postflight/pillars.example.md postflight-state/pillars.local.md
 ```
 
 Then edit `pillars.local.md`:
@@ -66,7 +70,8 @@ only your own tweets make it sound like *you*.
 
 For pillars with `media: photos:<dir>`.
 
-A photo library is a directory (typically `state/media/photos/`) plus a
+A photo library is a directory (typically
+`postflight-state/media/photos/`) plus a
 `manifest.yaml` describing each photo:
 
 | Field | What it's for |
@@ -135,8 +140,9 @@ library".
 
 ### Backups
 
-The library lives under `state/`, so it's never committed. A plain
-`cp -R` of the photos directory is a full backup.
+The library lives under `postflight-state/`, so it's never committed — and
+since nothing in there is a credential, a plain `cp -R` of the whole
+directory is a complete backup of everything the skill cannot recreate.
 
 `migrate-state.sh` carries it too when you migrate machines, but that
 tarball also contains live credentials, so don't reach for it as a casual
@@ -144,7 +150,7 @@ photo backup.
 
 ## 4. Style references
 
-In `state/settings.json`, `styleAccounts` lists public accounts whose
+In `postflight-state/settings.json`, `styleAccounts` lists public accounts whose
 register gets studied during the weekly style refresh.
 
 Patterns only, never opinions or phrasings, and they're never named in

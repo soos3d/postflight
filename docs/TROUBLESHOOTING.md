@@ -143,11 +143,49 @@ a partial list silently shrinks your schedule.
 Expected. Past posts are keyed by pillar name in the post log, so a rename
 starts the rotation fresh.
 
-## Nothing sends; drafts pile up in `state/drafts.md`
+## Nothing sends; drafts pile up in `postflight-state/drafts.md`
 
-`telegramTo` is empty in `state/settings.json`. That's draft mode, and it's
+`telegramTo` is empty in `postflight-state/settings.json`. That's draft mode, and it's
 the safe default: the skill writes drafts to disk, sends nothing, posts
 nothing. Set your Telegram user id to go live.
+
+If it *was* set and drafting silently went quiet after an upgrade, see the
+next entry — an empty `settings.json` has an empty `telegramTo`, which looks
+exactly like draft mode.
+
+## After an upgrade the skill acts like a fresh install
+
+Symptoms: no post history, topics it covered last week come back, photo
+cooldowns reset, and nothing sends because `telegramTo` reads empty.
+
+State moved out of the skill folder in v1.2.0, so first check which
+directory has your history:
+
+```sh
+ls ~/.openclaw/workspace/postflight-state/            # where it belongs
+ls ~/.openclaw/workspace/skills/postflight/state/     # where it was before
+```
+
+**History in the old path, or in neither:** the move hasn't run. Do it with
+`cd ~/postflight && git pull && ./scripts/install.sh`, or by hand with
+`./scripts/relocate-state.sh`. The skill stops rather than drafting when it
+sees this, so nothing was posted against an empty history.
+
+**Both directories have content:** two histories, and the tooling refuses to
+guess. Keep the one with the real post log, move the other aside, then
+rerun.
+
+**Neither has anything and you upgraded through ClawHub:** the 1.1.0 → 1.2.0
+hop over `openclaw skills update` deletes the old directory, and that is the
+one upgrade this design cannot rescue (see [Manual
+setup](SETUP-MANUAL.md#from-clawhub-instead)). OpenClaw moves the folder to
+`~/.openclaw/workspace/skills/.openclaw-install-backups/` first, but removes
+it once the new files land, so it is only still there if the update failed
+partway. Worth one `ls` before concluding the history is gone; don't expect
+it after a clean update.
+
+Whichever applies, send `/new` afterwards. A running session read the old
+paths when it started.
 
 ## `openclaw skills list` doesn't show postflight as ready
 

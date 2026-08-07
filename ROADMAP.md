@@ -48,7 +48,19 @@ installs pick it up on the next `setup.sh` with no edit here.
 An existing chain is never rewritten, and setup.sh configures one on
 already-authed installs too, not just fresh ones.
 
-### 3. Per-install pillar config — SHIPPED 2026-08-05
+### 3. State outside the skill folder — SHIPPED 2026-08-06
+
+`openclaw skills update` and `skills install --force` replace the skill
+directory wholesale — the old one is moved aside and deleted once the new
+files land — so every registry upgrade took the post log, metrics, photo
+library, and both `*.local.md` files with it. All of that lives in
+`<workspace>/postflight-state/` now, one level up from `skills/`, where no
+installer reaches it. ClawHub became a safe upgrade path and not only a safe
+first install; `scripts/relocate-state.sh` moves existing installs and comes
+out on 2027-02-01. The 1.1.0 → 1.2.0 hop is the exception and has to go
+through git or a manual copy.
+
+### 4. Per-install pillar config — SHIPPED 2026-08-05
 
 The pillar schedule moved out of the tracked files: CONTENT.md now ships
 a generic default set (builds / insights / build-in-public) and an
@@ -58,7 +70,7 @@ Pillar behavior in SKILL.md is property-driven (`media:`, `link:`,
 `register:`, `source:`), so custom pillars need no instruction edits,
 and `git pull` never conflicts with personalization.
 
-### 4. Media posts — SHIPPED 2026-08-04
+### 5. Media posts — SHIPPED 2026-08-04
 
 Shipped bigger than planned: not just image support but media-first repo
 posts with the link in a self-reply (link-card posts are the format X
@@ -75,10 +87,10 @@ $0.20 per post containing a URL, but observed billing on this account is
 price — check the usage meter after the first real upload. The
 link-in-reply format bills a repo post as two posts.
 
-### 5. Engagement readback — SHIPPED 2026-08-05
+### 6. Engagement readback — SHIPPED 2026-08-05
 
 The Monday maintenance turn now pulls metrics for posts 7–14 days old in
-one batched read, logs them to `state/metrics.jsonl`, appends a dated
+one batched read, logs them to `postflight-state/metrics.jsonl`, appends a dated
 "what worked" note to the backlog, and sends a Telegram digest: best and
 worst post, median impressions by pillar and by format, follower delta.
 Pillar weights stay a human edit to the grid — the digest informs, it
@@ -86,7 +98,7 @@ never steers. Cost caveat: API reads bill pay-per-use like posts, and
 `non_public_metrics` (profile clicks) may be tier-gated — the readback
 falls back to `public_metrics` and says so in the digest.
 
-### 6. Photo library pillars — SHIPPED 2026-08-05
+### 7. Photo library pillars — SHIPPED 2026-08-05
 
 `media: photos:<dir>` pillars now draw from a curated library described
 by a manifest: only photos deliberately added are postable, selection
@@ -98,7 +110,7 @@ photos can now be sent straight to the bot (as a file, with a caption
 as the note) — the agent suggests tags and runs that same script, so
 the script remains the only manifest writer.
 
-### 7. Reply drafting assist — SHIPPED 2026-08-05
+### 8. Reply drafting assist — SHIPPED 2026-08-05
 
 Forward someone's post link to the bot and it returns 2–3 reply options
 in your voice — each must carry code, a gotcha, or a number from your
@@ -109,7 +121,7 @@ promise there is about sending, and this feature sends nothing.
 
 ## Next
 
-### 8. Per-slot model overrides — [#18](https://github.com/soos3d/postflight/issues/18)
+### 9. Per-slot model overrides — [#18](https://github.com/soos3d/postflight/issues/18)
 
 OpenClaw's `openclaw cron edit <id> --model <ref>` lets each cron slot run a
 different model: cheap model for the Monday backlog refresh, strong model
@@ -117,7 +129,7 @@ for drafting. Mostly a documentation task now that provider choice
 (item 1) has shipped. Needs a live check first — openclaw#28905 reports cron overrides
 being ignored in some versions.
 
-### 9. Thread support
+### 10. Thread support
 
 Multi-tweet drafts approved as one unit, published as a reply chain
 (`reply.in_reply_to_tweet_id`). The building blocks shipped with media
@@ -127,7 +139,7 @@ generalize that package to N tweets.
 
 ## Later
 
-### 10. Second network: Bluesky — [#16](https://github.com/soos3d/postflight/issues/16)
+### 11. Second network: Bluesky — [#16](https://github.com/soos3d/postflight/issues/16)
 
 A new `PUBLISH-BLUESKY.md` following the same shape as the existing publish
 docs. Bluesky's token API needs no OAuth dance, which makes it the easiest
@@ -135,14 +147,14 @@ second network. Mastodon would follow the same pattern.
 [CONTRIBUTING.md](CONTRIBUTING.md) already invites publish docs for other
 networks — this is a good first contribution.
 
-### 11. Skip/edit feedback loop
+### 12. Skip/edit feedback loop
 
 When the owner skips a draft or asks for an edit, log the reason to a state
 file that future drafting turns read. The agent is forbidden from editing
-its own instruction files, so learning accumulates in `state/`, and proven
+its own instruction files, so learning accumulates in `postflight-state/`, and proven
 lessons get promoted into `VOICE.md` by a human through git.
 
-### 12. Style refresh for headless installs
+### 13. Style refresh for headless installs
 
 `styleAccounts` study currently needs a browser session, which a VPS install
 doesn't have. Parked until there's a clean headless path.

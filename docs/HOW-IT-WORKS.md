@@ -34,7 +34,7 @@ the turn actually needs them.
 Each cron slot runs the same five steps.
 
 **1. Sweep, then check the budget.** Pending drafts older than 24h move to
-`state/skipped/`, which is itself swept at 30 days; generated media older than
+`postflight-state/skipped/`, which is itself swept at 30 days; generated media older than
 a week that no pending draft references is deleted, and photo libraries are
 never touched. Then the budget: three posts a day maximum, nothing resembling
 the last ten topics. Look up the slot's pillar in the weekly grid. Every
