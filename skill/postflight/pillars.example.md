@@ -1,8 +1,9 @@
 <!-- TEMPLATE — delete this line once you have edited the file. While it is present, the skill ignores this file and runs the default schedule. -->
 # Pillar configuration — personal overlay
 
-Copy this file to `pillars.local.md` (same folder), make it yours, and
-delete the TEMPLATE line at the top. The full walkthrough is in
+Copy this file to `postflight-state/pillars.local.md` — not next to this
+one, which an upgrade overwrites — make it yours, and delete the TEMPLATE
+line at the top. The full walkthrough is in
 docs/CUSTOMIZE.md. How it works: your `## Pillars` list and `## Weekly
 grid` below replace the defaults in CONTENT.md wholesale — so keep them
 complete, don't write a diff. A pillar named here without its own
@@ -34,7 +35,7 @@ below — replace them with topics you can write about firsthand.
 - **insights** (7) — media: none · link: none · register: technical ·
   source: own-notes. Opinions, lessons, hot takes from real work. Pure
   text, no links.
-- **your-hobby** (4) — media: photos:state/media/photos/ · link: none ·
+- **your-hobby** (4) — media: photos:media/photos/ · link: none ·
   register: personal · source: own-notes. A topic with photos you take
   yourself (hiking, cooking, a sport). Cells fall back until the photo
   library has photos in it.

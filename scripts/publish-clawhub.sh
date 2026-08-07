@@ -71,6 +71,27 @@ if [ "$staged_files" != "$allowed_files" ]; then
   exit 1
 fi
 
+# State moved out of the skill folder in v1.2.0 because an installer replaces
+# that folder wholesale. A doc still pointing the agent at the old paths is
+# not a stale doc — it is a live instruction to write into a directory the
+# next upgrade deletes, and it would ship to a public registry. The two greps
+# below are what make a half-updated instruction set a red build instead.
+stale="$(grep -rIln -e '{baseDir}/state' \
+                    -e '{baseDir}/pillars.local.md' \
+                    -e '{baseDir}/voice-examples.local.md' "$STAGE" || true)"
+if [ -n "$stale" ]; then
+  printf 'error: these staged files still point at the pre-v1.2.0 state paths:\n' >&2
+  printf '%s\n' "$stale" | sed "s|$STAGE/|  |" >&2
+  printf '\nState lives in <workspace>/postflight-state now. See SKILL.md\n' >&2
+  printf '"Where things live" for the spelling these should use.\n' >&2
+  exit 1
+fi
+
+# The definition itself. Without it every relative postflight-state/ path in
+# the other docs is a string the agent has no way to resolve.
+grep -q 'postflight-state/' "$STAGE/SKILL.md" \
+  || die "SKILL.md never mentions postflight-state/ — the state directory is undefined for the agent"
+
 if grep -rIl --exclude-dir=.git -E '[0-9]{8,}' "$STAGE" >/dev/null 2>&1; then
   printf 'note: the staged copy contains long digit runs. Check them before publishing:\n' >&2
   grep -rIn --exclude-dir=.git -E '[0-9]{8,}' "$STAGE" | sed "s|$STAGE/||" >&2

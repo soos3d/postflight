@@ -12,6 +12,12 @@
 # not something that happened.
 #
 # This file lives in scripts/ rather than the skill folder so it never ships.
+#
+# Since v1.2.0 the published folder is also read-only at runtime: state and
+# the user's *.local.md files live in <workspace>/postflight-state, outside
+# anything an installer replaces. So this list is the whole skill, not the
+# skill minus the personal parts, and publish-clawhub.sh greps the staged
+# copy for docs still pointing at the old in-folder paths.
 
 CONTENT.md
 PHOTO-INGESTION.md

@@ -69,10 +69,14 @@ openclaw skills install @soos3d/postflight
 That unpacks the skill into `~/.openclaw/workspace/skills/postflight` and
 stops there. It is the skill's instructions and nothing else: no X or
 Telegram auth, no cron jobs, no `setup.sh`. Run the wizard afterwards for
-those — it leaves the installed files alone and picks up from there. What
-each path does and doesn't cover is in
-[Manual setup](docs/SETUP-MANUAL.md#from-clawhub-instead), including why
-`openclaw skills update` is the wrong way to upgrade this one.
+those — it leaves the installed files alone and picks up from there.
+
+From v1.2.0 on, `openclaw skills update @soos3d/postflight` is also a safe
+way to upgrade, because your settings, post log, and photo library live
+outside the folder it replaces. The one hop it cannot make safely is
+**1.1.0 → 1.2.0**; [Manual
+setup](docs/SETUP-MANUAL.md#from-clawhub-instead) says why and what to do
+instead.
 
 ### 3. Watch one loop run
 
@@ -111,11 +115,12 @@ conflicts with your customization. Full walkthrough in
 |---|---|---|
 | Your topics and weekly schedule | `pillars.local.md` | Without it, the default builds / insights / build-in-public schedule runs |
 | 3 to 5 of your own tweets | `voice-examples.local.md` | They outrank every other style rule. Don't skip this one |
-| Accounts whose register to study | `styleAccounts` in `state/settings.json` | Patterns only, never named in posts |
+| Accounts whose register to study | `styleAccounts` in `settings.json` | Patterns only, never named in posts |
 
-These live in `~/.openclaw/workspace/skills/postflight/`, where the default
-install copies the skill. `install.sh` never touches `state/` or
-`*.local.md`.
+These live in `~/.openclaw/workspace/postflight-state/`, next to the post
+log and your photo library — deliberately outside the skill folder, which
+every upgrade replaces wholesale. Nothing that installs or updates the skill
+can reach them.
 
 ## Guardrails
 

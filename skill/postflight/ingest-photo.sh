@@ -8,8 +8,8 @@
 #
 # usage: ingest-photo.sh [options] <photo> "<one-line note>" <tag> [tag ...]
 #        ingest-photo.sh [options] --note-file F <photo> <tag> [tag ...]
-#   --dir DIR            library directory (default: the installed skill's
-#                        state/media/photos, else this skill folder's);
+#   --dir DIR            library directory (default:
+#                        <workspace>/postflight-state/media/photos);
 #                        must not contain ".."
 #   --location "..."     where it was taken (shown in the approval message)
 #   --location-file F    read the location from a file instead (safe for
@@ -26,18 +26,15 @@ set -euo pipefail
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 ok()  { printf '  ok: %s\n' "$*"; }
 
-# The library must live where the agent reads it: the installed copy if
-# this machine has one, else the skill folder this script sits in (covers
-# --dev symlink installs, where both paths are the same tree).
+# The library must live where the agent reads it, which is one path now:
+# <workspace>/postflight-state/media/photos, the same for a copy install, a
+# --dev symlink, and a ClawHub install. There is deliberately no fallback to
+# the folder this script sits in — that used to cover running from a
+# checkout, and it would now file photos somewhere the agent never looks.
 default_dir() {
-  local installed="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}/skills/postflight"
-  local here
-  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  if [[ -d "$installed" ]]; then
-    printf '%s' "$installed/state/media/photos"
-  else
-    printf '%s' "$here/state/media/photos"
-  fi
+  local workspace="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
+  [[ -d "$workspace" ]] || die "no OpenClaw workspace at $workspace — set OPENCLAW_WORKSPACE, or pass --dir"
+  printf '%s' "$workspace/postflight-state/media/photos"
 }
 
 # One-line YAML double-quoted scalar: escape backslashes and quotes,

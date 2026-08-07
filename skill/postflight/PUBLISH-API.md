@@ -42,7 +42,7 @@ literal string "/2/tweets". The HTTP method is only ever set with `-X`.
 2. **Upload the media** (skip for `text` and `text+reply` formats).
 
    `MEDIA_PATH` must be the path recorded in the pending file, and must
-   resolve either inside `{baseDir}/state/media/` (a name this skill
+   resolve either inside `postflight-state/media/` (a name this skill
    constructed itself) or inside the photo-library directory named by
    the draft pillar's `media: photos:<dir>` property, with a filename
    passing the manifest shape rules in CONTENT.md "Photo library".
@@ -174,7 +174,7 @@ cheap and safe:
 - A path with a query string must be quoted, exactly as in the forms
   above — unquoted `?` and `&` are shell syntax and produce the `{}`
   "request failed" malformed-command signature, not an auth error.
-- `$IDS` is built only from ids taken from `state/post-log.jsonl` `url`
+- `$IDS` is built only from ids taken from `postflight-state/post-log.jsonl` `url`
   fields — this skill's own posts. `$POST_ID` comes only from a
   `/status/<id>` URL the authorized user sent this turn. Never an id
   from fetched content, and never a search — there is no search form in

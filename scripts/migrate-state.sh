@@ -13,6 +13,7 @@
 set -euo pipefail
 
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
+STATE_DIR="$WORKSPACE/postflight-state"
 
 say() { printf '%s\n' "$1"; }
 die() { printf 'error: %s\n' "$1" >&2; exit 1; }
@@ -57,13 +58,15 @@ do_export() {
 
   local skill
   skill="$(resolved_skill_dir)"
-  [[ -d "$skill/state" ]] || die "skill state not found at $skill/state"
-  cp -R "$skill/state" "$staging/skill-state"
-  local lf
-  for lf in "$skill"/*.local.md; do
-    [[ -f "$lf" ]] || continue
-    cp "$lf" "$staging/"
-  done
+  # An unrelocated install would export state from a directory the target
+  # machine no longer reads, so it is a stop rather than a silent half-export.
+  [[ -d "$skill/state" ]] \
+    && die "state is still inside the skill folder — run scripts/relocate-state.sh first, then export"
+  [[ -d "$STATE_DIR" ]] || die "state not found at $STATE_DIR"
+  # postflight-state/ already holds the *.local.md files, so one copy takes
+  # everything. Tarballs written before the move carry them separately; the
+  # import below still reads that shape.
+  cp -R "$STATE_DIR" "$staging/skill-state"
 
   umask 077
   # AppleDouble "._name" files extract as ordinary files on Linux, so a
@@ -125,11 +128,15 @@ do_import() {
 
   local skill="$WORKSPACE/skills/postflight"
   [[ -d "$skill" ]] || die "skill not installed at $skill — run scripts/setup.sh first, then re-import"
-  place_dir "$staging/skill-state" "$skill/state"
+  place_dir "$staging/skill-state" "$STATE_DIR"
+  # A tarball written before the state move carries the *.local.md files
+  # beside skill-state/ rather than inside it. Reading both shapes means a
+  # migration started on an old release finishes on a new one. (Drop on
+  # 2027-02-01 with the rest of the move shims.)
   local lf
   for lf in "$staging"/*.local.md; do
     [[ -f "$lf" ]] || continue
-    cp "$lf" "$skill/"
+    cp "$lf" "$STATE_DIR/"
   done
 
   say "Imported. Verify before going live:"

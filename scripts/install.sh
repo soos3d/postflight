@@ -80,7 +80,8 @@ migrate_legacy_state() {
 if [[ "$MODE" == "dev" ]]; then
   if [[ -e "$SKILL_DEST" && ! -L "$SKILL_DEST" ]]; then
     echo "error: $SKILL_DEST exists and is not a symlink." >&2
-    echo "Back up its state/ directory, remove it, then rerun with --dev." >&2
+    echo "Remove it, then rerun with --dev. State lives in" >&2
+    echo "$WORKSPACE/postflight-state and is not affected." >&2
     exit 1
   fi
   ln -sfn "$SKILL_SRC" "$SKILL_DEST"
@@ -108,19 +109,20 @@ else
   SKILL_SRC="$SKILL_DEST"
 fi
 
-mkdir -p "$SKILL_SRC/state/pending" "$SKILL_SRC/state/skipped" "$SKILL_SRC/state/media"
-touch "$SKILL_SRC/state/post-log.jsonl" "$SKILL_SRC/state/backlog.md"
-if [[ ! -f "$SKILL_SRC/state/settings.json" ]]; then
-  cp "$SKILL_SRC/settings.example.json" "$SKILL_SRC/state/settings.json"
-  echo "Created state/settings.json from settings.example.json"
-fi
+# State lives outside the skill folder, so this both moves a pre-move install
+# and creates a fresh one. It runs after migrate_legacy_state, which means a
+# pre-v1.0.0 tree hops x-poster/state -> postflight/state -> postflight-state
+# in a single run.
+OPENCLAW_WORKSPACE="$WORKSPACE" bash "$REPO_DIR/scripts/relocate-state.sh"
+
+STATE_DIR="$WORKSPACE/postflight-state"
 
 cat <<EOF
 
 Skill files: $SKILL_SRC
-Settings:    $SKILL_SRC/state/settings.json
-Voice anchor (add 3-5 of your own tweets): $SKILL_SRC/voice-examples.local.md
-Your pillars (copy pillars.example.md here and edit): $SKILL_SRC/pillars.local.md
+Settings:    $STATE_DIR/settings.json
+Voice anchor (add 3-5 of your own tweets): $STATE_DIR/voice-examples.local.md
+Your pillars (copy pillars.example.md there and edit): $STATE_DIR/pillars.local.md
 EOF
 
 if [[ $QUIET -eq 0 ]]; then

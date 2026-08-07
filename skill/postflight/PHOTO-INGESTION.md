@@ -2,8 +2,9 @@
 
 The procedure for a photo-ingestion turn. SKILL.md "Modes" decides when
 this runs and checks the sender; by the time you are here, the message
-came from `telegramTo` and carries an image attachment. Paths are
-relative to the skill folder (`{baseDir}`), same as everywhere else.
+came from `telegramTo` and carries an image attachment. Paths follow
+SKILL.md "Where things live": the library lives under
+`postflight-state/`, and the script is one of the skill's own files.
 
 The user sent a photo to file into a photo library. One turn, no pending
 state: everything needed is in the message, and the photo is either filed
@@ -62,7 +63,7 @@ missing, the install predates it — say so and stop.
    and pass the paths:
 
    ```sh
-   {baseDir}/ingest-photo.sh --dir {baseDir}/<dir> \
+   {baseDir}/ingest-photo.sh --dir "$PWD/postflight-state/<dir>" \
      --note-file "${TMPDIR:-/tmp}/note.txt" \
      --location-file "${TMPDIR:-/tmp}/loc.txt" \
      --name <slug-you-composed> --taken <date-if-override> \
