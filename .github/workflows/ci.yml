@@ -32,11 +32,17 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Parse under this runner's /bin/bash
-        run: /bin/bash -n scripts/*.sh scripts/hooks/* skill/postflight/*.sh
+        run: /bin/bash -n scripts/*.sh scripts/tests/*.sh scripts/hooks/* skill/postflight/*.sh
 
       - name: ShellCheck
         if: runner.os == 'Linux'
-        run: shellcheck -S style scripts/*.sh scripts/hooks/* skill/postflight/*.sh
+        run: shellcheck -S style scripts/*.sh scripts/tests/*.sh scripts/hooks/* skill/postflight/*.sh
+
+      # The one script here that moves data the user cannot recreate, so it is
+      # the one with tests. Runs on both platforms: the fixture leans on find,
+      # comm, and cp -R, which differ between BSD and GNU.
+      - name: State relocation fixture
+        run: ./scripts/tests/relocate-fixture.sh
 
   secrets:
     name: Secret scan
