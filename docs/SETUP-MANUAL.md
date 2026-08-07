@@ -298,6 +298,16 @@ as `telegramTo`. That is one path for every install shape — copy, `--dev`
 symlink, or ClawHub — because the state directory is anchored to the
 workspace rather than to wherever the skill files landed.
 
+`install.sh` and `setup.sh` create that file. A ClawHub install does not:
+the skill writes it on its first turn instead, which is after you need it
+here. Create it now if it's missing:
+
+```sh
+mkdir -p ~/.openclaw/workspace/postflight-state
+cp -n ~/.openclaw/workspace/skills/postflight/settings.example.json \
+      ~/.openclaw/workspace/postflight-state/settings.json
+```
+
 That field is the approval gate: only that sender can ship a draft. While
 it's empty the skill runs in draft mode, writing to
 `postflight-state/drafts.md`, sending nothing and posting nothing.
