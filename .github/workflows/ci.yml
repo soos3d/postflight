@@ -38,11 +38,28 @@ jobs:
         if: runner.os == 'Linux'
         run: shellcheck -S style scripts/*.sh scripts/tests/*.sh scripts/hooks/* skill/postflight/*.sh
 
-      # The one script here that moves data the user cannot recreate, so it is
-      # the one with tests. Runs on both platforms: the fixture leans on find,
-      # comm, and cp -R, which differ between BSD and GNU.
+      # The scripts here that move data the user cannot recreate, so they are
+      # the ones with tests. Both run on both platforms: they lean on find,
+      # comm, rsync, and cp -R, which differ between BSD and GNU.
       - name: State relocation fixture
         run: ./scripts/tests/relocate-fixture.sh
+
+      - name: Install chain fixture
+        run: ./scripts/tests/install-fixture.sh
+
+      # A skill doc still naming {baseDir}/state tells the agent to write into
+      # the folder the next upgrade deletes. git ls-files scopes this to what
+      # actually ships — the user's own *.local.md files are untracked.
+      - name: No skill doc points at the pre-v1.2.0 state paths
+        if: runner.os == 'Linux'
+        run: |
+          if git ls-files skill/ | xargs grep -ln \
+               -e '{baseDir}/state' \
+               -e '{baseDir}/pillars.local.md' \
+               -e '{baseDir}/voice-examples.local.md'; then
+            echo "::error::the files above still point at the pre-v1.2.0 state paths"
+            exit 1
+          fi
 
   secrets:
     name: Secret scan

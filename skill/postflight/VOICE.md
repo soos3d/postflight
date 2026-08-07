@@ -13,7 +13,7 @@ code. The register to aim for:
 
 The account's actual voice anchor is `voice-examples.local.md` (the user's own
 tweets). If that file exists, match it over everything else in this document.
-`styleAccounts` in `state/settings.json` may list public accounts whose
+`styleAccounts` in `postflight-state/settings.json` may list public accounts whose
 register to study; adopt patterns from them, never opinions, projects, or
 recognizable phrasings, and never name them in output.
 
@@ -111,6 +111,6 @@ fit the character cap, re-run only the count, not this checklist.
 Maintenance turns only (see SKILL.md Modes), at most weekly. When a browser
 session on x.com is available, read the latest ~20 posts from each account in
 `styleAccounts` and from the user's own profile — viewing only, no
-likes/follows/replies — and update `state/style-samples.md` with 5-10
+likes/follows/replies — and update `postflight-state/style-samples.md` with 5-10
 representative examples. Never copy a tweet's wording into a draft. Skip this
 entirely when no browser session exists (e.g. headless deployments).

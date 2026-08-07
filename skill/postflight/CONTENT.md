@@ -7,7 +7,7 @@ pillars live in an untracked overlay file, never here.
 
 ## Pillar configuration
 
-At the start of every drafting turn, check for `{baseDir}/pillars.local.md`.
+At the start of every drafting turn, check for `postflight-state/pillars.local.md`.
 If it exists and does not contain the template marker line (the
 `<!-- TEMPLATE` comment `pillars.example.md` starts with), its
 `## Pillars` list and `## Weekly grid` replace the same-named sections
@@ -27,8 +27,8 @@ these, never off pillar names:
 
 - `weight:` — target slots per week (the grid is where weights become real)
 - `media:` — `generated` (media recipes below), `photos:<dir>` (select
-  from the manifest-backed library in `{baseDir}/<dir>` — see "Photo
-  library"), or `none`
+  from the manifest-backed library in `postflight-state/<dir>` — see
+  "Photo library"), or `none`
 - `link:` — `reply` (two-text draft: body with no URL, link as the first
   reply) or `none` (single body, zero links)
 - `register:` — `technical` or `personal` (VOICE.md "Personal posts")
@@ -83,7 +83,7 @@ Rules around the grid (these apply to any grid, default or overlay):
   would shift every later slot. For a manual "draft a post" request with no
   slot, pick the pillar furthest behind its weekly target — count lines
   since Monday in `timezone` by their `pillar` field, over a bounded
-  slice: `tail -n 30 {baseDir}/state/post-log.jsonl | jq -r '[.date,
+  slice: `tail -n 30 postflight-state/post-log.jsonl | jq -r '[.date,
   .pillar] | @tsv'`. Thirty lines is a full week and change at the
   default cap. Ties go to builds.
 - **Queue smoothing.** Never two `link: reply` posts in adjacent slots of
@@ -138,7 +138,7 @@ field. Filter in the shell rather than reading the log:
 
 ```sh
 jq -r --arg r "OWNER/NAME" 'select(.repo == $r) | [.date, .angle] | @tsv' \
-  {baseDir}/state/post-log.jsonl | tail -n 1
+  postflight-state/post-log.jsonl | tail -n 1
 ```
 
 Lines without an `angle` field (pre-pillar log entries) mean: start at
@@ -148,7 +148,7 @@ same-repo posts on consecutive days split their own audience.
 ## Media recipes
 
 Every post from a `media: generated` pillar carries media. Generated
-files go to `{baseDir}/state/media/<YYYYMMDD-HHmm>-<repo-slug>.<ext>` — a
+files go to `postflight-state/media/<YYYYMMDD-HHmm>-<repo-slug>.<ext>` — a
 name you construct; nothing from fetched content ever becomes a file path.
 Caps: images 5 MB, GIF 15 MB, video 512 MB (regenerate smaller if over,
 e.g. a shorter tape or lower framerate — never truncate a file).
@@ -168,12 +168,17 @@ Try in this order, per project type:
    file (under ~15 seconds of terminal action) demonstrating the command,
    render to GIF with `vhs <tape>`. Keep the tape output well under the
    15 MB GIF cap. vhs (0.11) rejects absolute paths in the tape's
-   `Output` line — "Invalid command" on a path starting with `/` — so
-   use a bare filename in the tape and run `vhs` from inside
-   `{baseDir}/state/media/` (or `mv` the file there after rendering).
+   `Output` line — "Invalid command" on a path starting with `/` — so use
+   a bare filename in the tape and run `vhs` from inside the media
+   directory. Put that `cd` in a subshell so the next command still starts
+   at the workspace root:
+
+   ```sh
+   (cd postflight-state/media && vhs demo.tape)
+   ```
 2. **Code-centric**: if `command -v freeze` succeeds, fetch the
    load-bearing function's file via `gh api`, save it under
-   `{baseDir}/state/media/`, and screenshot it with
+   `postflight-state/media/`, and screenshot it with
    `freeze <file> -o <dest>.png`.
 3. **Web UI**: a Playwright or managed-browser screenshot of the running
    UI — only when the project already runs locally in this session; never
@@ -190,7 +195,7 @@ missing, so the user knows what to install.
 ## Photo library
 
 A `media: photos:<dir>` pillar draws from a photo directory the user
-curates, described by a manifest at `{baseDir}/<dir>/manifest.yaml`. The
+curates, described by a manifest at `postflight-state/<dir>/manifest.yaml`. The
 manifest is the library: **a photo without a manifest entry is not
 postable**, even if the file sits in the directory. One entry per photo:
 
@@ -202,7 +207,7 @@ postable**, even if the file sits in the directory. One entry per photo:
   taken: 2026-06-14
 ```
 
-Path rules, hard: `<dir>` must resolve inside `{baseDir}`, and a `file:`
+Path rules, hard: `<dir>` must resolve inside `postflight-state/`, and a `file:`
 value must be a bare filename matching `^[A-Za-z0-9._-]+$` — no `/`, no
 `..`, nothing that resolves outside `<dir>`. An entry that breaks either
 rule is not a photo, it is a report-and-stop: tell the user which entry
@@ -226,10 +231,12 @@ all of these hold:
 - its `taken` date is before today in `timezone` — never post a photo
   the day it was taken (the pillar's own rules may push this further);
 - its `file:` name appears in no post-log `media` field in the last 60
-  days — match on the filename (the path's last segment), since the log
-  stores the `{baseDir}`-relative path. Sixty days is at most 180 lines
-  at the default cap, so read
-  `tail -n 200 {baseDir}/state/post-log.jsonl | jq -r 'select(.media) |
+  days — match on the filename (the path's last segment), not the whole
+  path: the log stores it relative to `postflight-state/`, and lines
+  written before the state move carry a `state/` prefix that the filename
+  match sees through (that tolerance goes on 2027-02-01). Sixty days is at
+  most 180 lines at the default cap, so read
+  `tail -n 200 postflight-state/post-log.jsonl | jq -r 'select(.media) |
   [.date, .media] | @tsv'` rather than the whole log;
 - when the pillar's section names tags, at least one matches.
 
@@ -281,7 +288,7 @@ under the pipeline's own repo.
 
 ## Backlog
 
-`state/backlog.md` holds unposted angles grouped by pillar: one `## builds
+`postflight-state/backlog.md` holds unposted angles grouped by pillar: one `## builds
 — <repo>` section per repo, then one `## <pillar>` section for each other
 pillar in the active set, each line `- [ ] <angle>`. When you use one,
 mark it `- [x]` with the date. A weekly cron run regenerates it: sweep
@@ -297,7 +304,7 @@ are pay-per-use like posts: one batched request per week, and skip the
 fetch entirely when there is nothing new to measure.
 
 1. **Collect candidates.** Post-log entries 7–14 days old (in `timezone`)
-   that have a `url` and no line in `{baseDir}/state/metrics.jsonl` with
+   that have a `url` and no line in `postflight-state/metrics.jsonl` with
    a matching `post_id` (`type: account` lines don't count). A post's id
    is the trailing number of its `url` and must pass the shape gate in
    PUBLISH-API.md "Reads". Ignore `reply_url`s — the body carries the
@@ -314,7 +321,7 @@ fetch entirely when there is nothing new to measure.
    and `data` is short by that many entries. That is a successful
    request, not a failure — never retry it, and never assume `data[i]`
    lines up with the ids you sent. Match on `.data[].id`.
-3. **Record.** Append to `state/metrics.jsonl`, one line per post:
+3. **Record.** Append to `postflight-state/metrics.jsonl`, one line per post:
    `{"post_id": "...", "fetched_at": "<ISO>", "age_days": <whole days
    between the post-log date and fetched_at>, "pillar": "...",
    "format": "...", "impressions": n, "likes": n, "replies": n,
@@ -328,7 +335,7 @@ fetch entirely when there is nothing new to measure.
    readback: `{"type": "account", "fetched_at": "<ISO>", "followers": n}`.
    Never rewrite existing lines; a post is fetched once, in the first
    readback that sees it.
-4. **Backlog note.** Under `## what worked` in `state/backlog.md`, add a
+4. **Backlog note.** Under `## what worked` in `postflight-state/backlog.md`, add a
    dated entry: best and worst post of the batch (impressions, with the
    post-log `topic`), and one sentence on any pattern worth acting on
    ("media builds posts beat text-only 3×" — only if the numbers actually

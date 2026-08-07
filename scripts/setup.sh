@@ -16,6 +16,9 @@ set -Eeuo pipefail
 REPO_URL="${POSTFLIGHT_REPO:-https://github.com/soos3d/postflight}"
 REPO_DIR="${POSTFLIGHT_DIR:-$HOME/postflight}"
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
+# Everything the user owns lives here, outside the skill folder an upgrade
+# replaces. Same path in --dev as in a copy install.
+STATE_DIR="$WORKSPACE/postflight-state"
 XURL_APP="postflight"
 XURL_VERSION="${XURL_VERSION:-1.3.1}"
 MODEL_ANTHROPIC="anthropic/claude-fable-5"
@@ -194,26 +197,39 @@ dev_install_ok() {
   [[ -L "$dest" && "$(readlink "$dest")" == "$REPO_DIR/skill/postflight" ]] && symlink_trusted
 }
 
-# A ClawHub install (openclaw skills install @soos3d/postflight) unpacks the
-# published files and nothing else, so the state/ scaffold install.sh creates
-# is absent and every step below that reads state/settings.json would die on
-# it. Same commands install.sh runs, and idempotent, so a tree installed the
-# usual way passes through untouched.
-ensure_state_scaffold() {
-  local dir="$1"
-  mkdir -p "$dir/state/pending" "$dir/state/skipped" "$dir/state/media"
-  touch "$dir/state/post-log.jsonl" "$dir/state/backlog.md"
-  [[ -f "$dir/state/settings.json" ]] && return 0
-  cp "$dir/settings.example.json" "$dir/state/settings.json"
-  echo "  Created state/settings.json from settings.example.json"
+# One call covers three cases the steps below all depend on: a ClawHub
+# install, which unpacks the published files and no state at all; a pre-move
+# install, whose state still sits in the skill folder where the next upgrade
+# deletes it; and an ordinary install, which passes through untouched.
+ensure_state() {
+  OPENCLAW_WORKSPACE="$WORKSPACE" bash "$REPO_DIR/scripts/relocate-state.sh" \
+    | sed 's/^/  /'
+}
+
+# --check writes nothing, so it reports the same three cases instead. The
+# pre-move one is the reason this is louder than a missing directory: that
+# install's history is one `openclaw skills update` from being deleted.
+report_state() {
+  if [[ -d "$(skill_dir)/state" ]]; then
+    todo "state is still inside the skill folder, where an upgrade deletes it — rerun without --check to move it"
+  elif [[ ! -d "$STATE_DIR" ]]; then
+    todo "no state directory yet — rerun without --check to create it"
+  else
+    ok "state at $STATE_DIR"
+  fi
 }
 
 step_skill() {
   step "Skill install"
   local dest="$WORKSPACE/skills/postflight"
   if [[ $DEV_MODE -eq 1 ]]; then
-    if dev_install_ok "$dest"; then ok "skill symlinked and trusted at $dest"; return 0; fi
+    if dev_install_ok "$dest"; then
+      if [[ $CHECK_ONLY -eq 1 ]]; then report_state; else ensure_state; fi
+      ok "skill symlinked and trusted at $dest"
+      return 0
+    fi
     if [[ $CHECK_ONLY -eq 1 ]]; then todo "dev install missing, wrong target, or symlink not trusted"; return 0; fi
+    # install.sh calls relocate-state.sh itself, so state is handled here.
     bash "$REPO_DIR/scripts/install.sh" --dev --quiet
     if ! symlink_trusted; then
       echo "  Trusting the symlink target in OpenClaw config (skills.load.allowSymlinkTargets)."
@@ -223,14 +239,8 @@ step_skill() {
     return 0
   fi
   if [[ -f "$dest/SKILL.md" && ! -L "$dest" ]]; then
-    if [[ $CHECK_ONLY -eq 1 ]]; then
-      ok "skill installed at $dest"
-      [[ -f "$dest/state/settings.json" ]] \
-        || todo "state/ scaffold missing — rerun without --check to create it"
-    else
-      ensure_state_scaffold "$dest"
-      ok "skill installed at $dest"
-    fi
+    if [[ $CHECK_ONLY -eq 1 ]]; then report_state; else ensure_state; fi
+    ok "skill installed at $dest"
     return 0
   fi
   if [[ $CHECK_ONLY -eq 1 ]]; then todo "skill not installed"; return 0; fi
@@ -452,7 +462,7 @@ step_media_tools() {
 
 # ---------- step 6: telegram ----------
 
-settings_file() { printf '%s/state/settings.json' "$(skill_dir)"; }
+settings_file() { printf '%s/settings.json' "$STATE_DIR"; }
 
 telegram_to() { jq -r '.telegramTo // empty' "$(settings_file)" 2>/dev/null || true; }
 
@@ -463,7 +473,7 @@ telegram_channel_installed() {
 write_telegram_to() {
   local file tmp
   file="$(settings_file)"
-  [[ -f "$file" ]] || die "settings.json missing at $file — rerun scripts/install.sh"
+  [[ -f "$file" ]] || die "settings.json missing at $file — rerun scripts/setup.sh"
   tmp="$(mktemp "$file.XXXXXX")"
   CLEANUP+=("$tmp")
   jq --arg id "$1" '.telegramTo = $id' "$file" > "$tmp" || die "could not update $file"
@@ -690,7 +700,7 @@ step_cron() {
 step_pillars() {
   step "Content pillars"
   local overlay example
-  overlay="$(skill_dir)/pillars.local.md"
+  overlay="$STATE_DIR/pillars.local.md"
   example="$(skill_dir)/pillars.example.md"
   if [[ -f "$overlay" ]]; then
     if grep -q '^<!-- TEMPLATE' "$overlay"; then
@@ -701,7 +711,7 @@ step_pillars() {
     return 0
   fi
   if ! interactive; then
-    todo "no custom pillars — running the default builds/insights schedule (copy pillars.example.md to pillars.local.md to customize)"
+    todo "no custom pillars — running the default builds/insights schedule (copy $example to $overlay to customize)"
     return 0
   fi
   local yn
@@ -719,7 +729,7 @@ step_pillars() {
 step_voice() {
   step "Voice"
   local voice
-  voice="$(skill_dir)/voice-examples.local.md"
+  voice="$STATE_DIR/voice-examples.local.md"
   if [[ -s "$voice" ]]; then
     ok "voice-examples.local.md has content"
   else

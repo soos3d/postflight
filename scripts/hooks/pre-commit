@@ -43,6 +43,24 @@ if printf '%s\n' "$staged" | grep -q '^skill/postflight/'; then
   fi
 fi
 
+# The same check CI's publish guard runs, moved to where it is cheapest to
+# fix. A skill doc pointing at {baseDir}/state tells the agent to write into
+# the folder the next upgrade deletes, so it is a live bug, not a stale doc.
+skill_files="$(printf '%s\n' "$staged" | grep '^skill/postflight/' || true)"
+if [ -n "$skill_files" ]; then
+  stale="$(printf '%s\n' "$skill_files" | tr '\n' '\0' \
+    | xargs -0 grep -ln -e '{baseDir}/state' \
+                       -e '{baseDir}/pillars.local.md' \
+                       -e '{baseDir}/voice-examples.local.md' 2>/dev/null || true)"
+  if [ -n "$stale" ]; then
+    printf '\033[31mpre-commit:\033[0m these still point at the pre-v1.2.0 state paths:\n' >&2
+    printf '%s\n' "$stale" | sed 's/^/  /' >&2
+    printf '\nState lives in <workspace>/postflight-state now. See SKILL.md\n' >&2
+    printf '"Where things live".\n' >&2
+    exit 1
+  fi
+fi
+
 # Belt and braces: content-level scan of the staged diff, when available.
 if command -v gitleaks >/dev/null 2>&1; then
   gitleaks protect --staged --redact --no-banner \

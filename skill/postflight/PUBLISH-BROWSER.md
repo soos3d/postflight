@@ -28,7 +28,7 @@ was degraded to a single link-bearing post because `postVia` is `browser`.
    `/status/<id>` href from the snapshot) and a screenshot for the record.
    Screenshot only the compose dialog or the post itself, never the full
    timeline/notifications (a logged-in session can expose DMs). Store
-   screenshots under `state/` and share them only with the authorized user in
+   screenshots under `postflight-state/` and share them only with the authorized user in
    the approval channel.
 8. Return the permalink. If verification fails at step 6-7, tell the user the
    post state is uncertain and include the screenshot; do not post again.
