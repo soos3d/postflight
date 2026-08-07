@@ -128,6 +128,36 @@ Two likely causes, in order:
    `VOICE.md` bans. Check `openclaw models status` points at a frontier
    model.
 
+## A draft ignored what I just told the bot
+
+You explained a project in Telegram, and the next slot drafted it as if the
+conversation never happened — accurate about the repo, missing everything
+you said.
+
+Cron slots run with `--session isolated`. They have never seen your chat and
+cannot: an isolated session is what stops a cron run from inheriting whatever
+a long-running conversation has accumulated. `postflight-state/` is the only
+thing the two share.
+
+**Tell the bot the same thing again in a normal message.** It appends a dated
+note to `postflight-state/backlog.md` under `## notes — <repo>`, and drafting
+reads those before it sweeps the repo. You can also write the section by hand;
+it's plain markdown. From then on the approval message's `material:` line says
+what each draft was built from, so `README only` on a repo you've discussed is
+visible before you ship it.
+
+**A model fallback is almost certainly not the cause**, however closely the
+timing lines up. Confirm it rather than assuming:
+
+```sh
+grep model_fallback_decision /tmp/openclaw/openclaw-$(date +%F).log \
+  | jq -rc '[.["1"].lane, .["1"].sessionId[0:8], .["1"].decision] | @tsv'
+```
+
+`candidate_succeeded` with the session id unchanged across the swap means the
+fallback did its job and kept the context. A `cron-nested` lane in those rows
+is the real answer: that draft came from a cron slot, not from your chat.
+
 ## My pillar edits do nothing
 
 `pillars.local.md` still has its `TEMPLATE` line at the top. The skill
