@@ -101,9 +101,17 @@ else
   fi
   migrate_legacy_state
   mkdir -p "$SKILL_DEST"
+  # The .clawhub/_meta/skill-card trio is written by `openclaw skills install`
+  # and is how the registry recognizes its own install. This script overwrites
+  # the skill files it owns; deleting someone else's provenance on the way past
+  # is not part of the job, and the wizard runs on top of a ClawHub install by
+  # design (README, "Want the skill files from a registry instead?").
   rsync -a --delete \
     --exclude 'state/' \
     --exclude '*.local.md' \
+    --exclude '.clawhub/' \
+    --exclude '_meta.json' \
+    --exclude 'skill-card.md' \
     "$SKILL_SRC/" "$SKILL_DEST/"
   echo "Copied skill to $SKILL_DEST"
   SKILL_SRC="$SKILL_DEST"

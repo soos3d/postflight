@@ -69,7 +69,8 @@ openclaw skills install @soos3d/postflight
 That unpacks the skill into `~/.openclaw/workspace/skills/postflight` and
 stops there. It is the skill's instructions and nothing else: no X or
 Telegram auth, no cron jobs, no `setup.sh`. Run the wizard afterwards for
-those — it leaves the installed files alone and picks up from there.
+those — it picks up from there and leaves the registry install intact, so
+`openclaw skills update` keeps working.
 
 From v1.2.0 on, `openclaw skills update @soos3d/postflight` is also a safe
 way to upgrade, because your settings, post log, and photo library live
