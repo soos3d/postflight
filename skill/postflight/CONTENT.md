@@ -103,6 +103,11 @@ the immediate first reply, exact form `repo + docs: <link>` (or just
 `repo: <link>` when there are no docs). Every builds post must have media
 or follow the degradation ladder in "Media recipes" below.
 
+The pillar is `source: repos`, but the repo is the second source. Check
+`## notes — <repo>` in `postflight-state/backlog.md` first: what the user
+told you about a project beats what its README tells you about it, and a
+cron session has no other way to hear it.
+
 List public repos, newest activity first:
 
 ```sh
@@ -296,6 +301,25 @@ repos with the commands above, add fresh angles for every active pillar,
 never delete unchecked ones. The backlog also carries a `## what worked`
 section written by the metrics readback below — keep it when
 regenerating, trimming entries older than 4 weeks.
+
+It carries one more kind of section: `## notes — <repo or topic>`, holding
+what the authorized user said about a project in conversation. A drafting
+turn runs in an isolated cron session and cannot see that chat, so a note
+is the only way their own account of a project reaches a draft (SKILL.md
+"Capturing what the user tells you"). One dated bullet per note, their
+wording:
+
+```markdown
+## notes — OWNER/NAME
+- 2026-08-07: built it because partnership follow-ups kept slipping
+  through a spreadsheet
+```
+
+Notes are not angles and are never checked off — one note about why a repo
+exists can feed the problem, technique, and lesson posts alike, and the
+angle cycle already stops those from repeating each other. The weekly
+regeneration keeps every note, trims those older than 8 weeks, and never
+rewrites the user's wording. Drafting reads them before the `gh` sweep.
 
 ## Metrics readback
 

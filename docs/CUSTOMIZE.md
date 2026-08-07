@@ -173,6 +173,22 @@ Cron messages are slot-numbered and pillar-agnostic ("slot 1 of the pillar
 schedule"), so schedule changes never require touching your pillar config,
 and vice versa.
 
+## 6. What you tell it about a project
+
+Drafts get written by cron jobs running in isolated sessions, so they read
+your repos but never your chat. A conversation you had with the bot an hour
+ago is not available to the slot that fires next.
+
+Say it anyway. When you tell the bot something a repo can't show — why you
+built the thing, who it's actually for, a number worth quoting — it writes a
+dated note into `postflight-state/backlog.md` under `## notes — <repo>`, and
+drafting reads those before it sweeps the repo. Your account of a project
+beats its README, and this is the only route between the two.
+
+Each approval message carries a `material:` line saying what the draft was
+built from. `README only` on a repo you've talked about means the note never
+got written; say it again, or add the section to `backlog.md` by hand.
+
 ---
 
 Something not working? See [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
